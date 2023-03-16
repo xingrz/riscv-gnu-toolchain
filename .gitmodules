@@ -36,3 +36,7 @@
 	path = pk
 	url = ../riscv-pk
 	branch = master
+[submodule "llvm"]
+	path = llvm
+	url = ../llvm-project
+	branch = release/16.x
