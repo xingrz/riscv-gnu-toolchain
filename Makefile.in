@@ -122,9 +122,6 @@ ifeq (@enable_llvm@,--enable-llvm)
 all: stamps/build-llvm-@default_target@
 newlib: stamps/build-llvm-newlib
 linux: stamps/build-llvm-linux
-ifeq (@multilib_flags@,--enable-multilib)
-$(error "Setting multilib flags for LLVM builds is not supported.")
-endif
 endif
 
 .PHONY: build-binutils build-gdb build-gcc1 build-libc build-gcc2 build-qemu build-llvm
@@ -901,6 +898,10 @@ stamps/build-qemu: $(QEMU_SRCDIR) $(QEMU_SRC_GIT)
 	mkdir -p $(dir $@)
 	date > $@
 
+#
+# LLVM
+#
+
 stamps/build-llvm-linux: $(LLVM_SRCDIR) $(LLVM_SRC_GIT) \
                          stamps/build-gcc-linux-stage2
 	# We have the following situation:
@@ -931,11 +932,34 @@ stamps/build-llvm-linux: $(LLVM_SRCDIR) $(LLVM_SRC_GIT) \
 	$(MAKE) -C $(notdir $@)
 	$(MAKE) -C $(notdir $@) install
 	cd $(INSTALL_DIR)/bin && ln -s clang $(LINUX_TUPLE)-clang
+	cd $(INSTALL_DIR)/bin && ln -s clang++ $(LINUX_TUPLE)-clang++
 	mkdir -p $(dir $@) && touch $@
 
-stamps/build-llvm-newlib:
-	echo "Building LLVM is only supported in combination with a Linux toolchain."
-	exit 1
+stamps/build-llvm-newlib: $(LLVM_SRCDIR) $(LLVM_SRC_GIT) \
+                         stamps/build-gcc-newlib-stage2
+	rm -rf $@ $(notdir $@)
+	mkdir $(notdir $@)
+	cd $(notdir $@) && \
+	   cmake $(LLVM_SRCDIR)/llvm \
+	   -DCMAKE_INSTALL_PREFIX=$(INSTALL_DIR) \
+	   -DLLVM_TARGETS_TO_BUILD="RISCV" \
+	   -DLLVM_ENABLE_PROJECTS="clang;lld" \
+	   -DLLVM_PARALLEL_COMPILE_JOBS=8 \
+	   -DLLVM_PARALLEL_LINK_JOBS=8 \
+	   -DCMAKE_BUILD_TYPE=Release \
+	   -DCLANG_DEFAULT_RTLIB=libgcc \
+	   -DCLANG_DEFAULT_CXX_STDLIB=libstdc++ \
+	   -DCLANG_DEFAULT_LINKER=lld \
+	   -DLLVM_INSTALL_TOOLCHAIN_ONLY=ON \
+	   -DDEFAULT_SYSROOT=$(INSTALL_DIR)/$(NEWLIB_TUPLE) \
+	   -DLLVM_DEFAULT_TARGET_TRIPLE="$(NEWLIB_TUPLE)" \
+	   -DDEFAULT_SYSROOT="$(INSTALL_DIR)/$(NEWLIB_TUPLE)" \
+	   -DCMAKE_BUILD_TYPE=Release
+	$(MAKE) -C $(notdir $@)
+	$(MAKE) -C $(notdir $@) install
+	cd $(INSTALL_DIR)/bin && ln -s clang $(NEWLIB_TUPLE)-clang
+	cd $(INSTALL_DIR)/bin && ln -s clang++ $(NEWLIB_TUPLE)-clang++
+	mkdir -p $(dir $@) && touch $@
 
 stamps/build-dejagnu: $(DEJAGNU_SRCDIR) $(DEJAGNU_SRC_GIT)
 	rm -rf $@ $(notdir $@)
