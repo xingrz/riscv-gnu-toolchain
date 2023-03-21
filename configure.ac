@@ -232,6 +232,17 @@ AS_IF([test "x$enable_llvm" != xyes],
 	[AC_SUBST(enable_llvm, --disable-llvm)],
 	[AC_SUBST(enable_llvm, --enable-llvm)])
 
+AC_ARG_ENABLE(doc,
+	[AS_HELP_STRING([--enable-doc],
+		[Build and install toolchain pdf documents])],
+	[enable_doc=yes],
+	[]
+	)
+
+AS_IF([test "x$enable_doc" != xyes],
+	[AC_SUBST(enable_doc, --disable-doc)],
+	[AC_SUBST(enable_doc, --enable-doc)])
+
 AC_DEFUN([AX_ARG_WITH_SRC],
 	[{m4_pushdef([opt_name], with_$1_src)
 	  AC_ARG_WITH($1-src,

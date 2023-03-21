@@ -1,6 +1,7 @@
 srcdir := @abs_top_srcdir@
 builddir := @abs_top_builddir@
 INSTALL_DIR := @prefix@
+DOC_DIR := $(INSTALL_DIR)/share/doc
 
 GCC_SRCDIR := @with_gcc_src@
 BINUTILS_SRCDIR := @with_binutils_src@
@@ -329,6 +330,9 @@ stamps/build-binutils-linux: $(BINUTILS_SRCDIR) $(BINUTILS_SRC_GIT) stamps/check
 		$(WITH_ISA_SPEC)
 	$(MAKE) -C $(notdir $@)
 	$(MAKE) -C $(notdir $@) install
+ifeq (@enable_doc@,--enable-doc)
+	$(MAKE) -C $(notdir $@) install-pdf
+endif
 	mkdir -p $(dir $@) && touch $@
 
 stamps/build-gdb-linux: $(GDB_SRCDIR) $(GDB_SRC_GIT)
@@ -353,6 +357,9 @@ stamps/build-gdb-linux: $(GDB_SRCDIR) $(GDB_SRC_GIT)
 		--disable-gprof
 	$(MAKE) -C $(notdir $@)
 	$(MAKE) -C $(notdir $@) install
+ifeq (@enable_doc@,--enable-doc)
+	$(MAKE) -C $(notdir $@) install-pdf
+endif
 	mkdir -p $(dir $@) && touch $@
 
 stamps/build-glibc-linux-headers: $(GLIBC_SRCDIR) $(GLIBC_SRC_GIT) stamps/build-gcc-linux-stage1
@@ -475,6 +482,9 @@ stamps/build-gcc-linux-stage2: $(GCC_SRCDIR) $(GCC_SRC_GIT) $(addprefix stamps/b
 		CXXFLAGS_FOR_TARGET="-O2 $(CXXFLAGS_FOR_TARGET)"
 	$(MAKE) -C $(notdir $@)
 	$(MAKE) -C $(notdir $@) install
+ifeq (@enable_doc@,--enable-doc)
+	$(MAKE) -C $(notdir $@) install-pdf
+endif
 	cp -a $(INSTALL_DIR)/$(LINUX_TUPLE)/lib* $(SYSROOT)
 	mkdir -p $(dir $@) && touch $@
 
@@ -498,6 +508,9 @@ stamps/build-binutils-linux-native: $(BINUTILS_SRCDIR) $(BINUTILS_SRC_GIT) stamp
 		$(WITH_ISA_SPEC)
 	$(MAKE) -C $(notdir $@)
 	$(MAKE) -C $(notdir $@) install
+ifeq (@enable_doc@,--enable-doc)
+	$(MAKE) -C $(notdir $@) install-pdf
+endif
 	mkdir -p $(dir $@) && touch $@
 
 stamps/build-gcc-linux-native: $(GCC_SRCDIR) $(GCC_SRC_GIT) stamps/build-gcc-linux-stage2 stamps/build-binutils-linux-native
@@ -528,6 +541,9 @@ stamps/build-gcc-linux-native: $(GCC_SRCDIR) $(GCC_SRC_GIT) stamps/build-gcc-lin
 		$(GCC_EXTRA_CONFIGURE_FLAGS) \
 	$(MAKE) -C $(notdir $@)
 	$(MAKE) -C $(notdir $@) install
+ifeq (@enable_doc@,--enable-doc)
+	$(MAKE) -C $(notdir $@) install-pdf
+endif
 	cp -a $(INSTALL_DIR)/$(LINUX_TUPLE)/lib* $(SYSROOT)
 	mkdir -p $(dir $@) && touch $@
 
@@ -553,6 +569,9 @@ stamps/build-binutils-newlib: $(BINUTILS_SRCDIR) $(BINUTILS_SRC_GIT) stamps/chec
 		$(WITH_ISA_SPEC)
 	$(MAKE) -C $(notdir $@)
 	$(MAKE) -C $(notdir $@) install
+ifeq (@enable_doc@,--enable-doc)
+	$(MAKE) -C $(notdir $@) install-pdf
+endif
 	mkdir -p $(dir $@) && touch $@
 
 stamps/build-gdb-newlib: $(GDB_SRCDIR) $(GDB_SRC_GIT)
@@ -574,6 +593,9 @@ stamps/build-gdb-newlib: $(GDB_SRCDIR) $(GDB_SRC_GIT)
 		--disable-gprof
 	$(MAKE) -C $(notdir $@)
 	$(MAKE) -C $(notdir $@) install
+ifeq (@enable_doc@,--enable-doc)
+	$(MAKE) -C $(notdir $@) install-pdf
+endif
 	mkdir -p $(dir $@) && touch $@
 
 stamps/build-gcc-newlib-stage1: $(GCC_SRCDIR) $(GCC_SRC_GIT) stamps/build-binutils-newlib
@@ -626,6 +648,9 @@ stamps/build-newlib: $(NEWLIB_SRCDIR) $(NEWLIB_SRC_GIT) stamps/build-gcc-newlib-
 		CXXFLAGS_FOR_TARGET="-O2 -D_POSIX_MODE -ffunction-sections -fdata-sections $(CXXFLAGS_FOR_TARGET)"
 	$(MAKE) -C $(notdir $@)
 	$(MAKE) -C $(notdir $@) install
+ifeq (@enable_doc@,--enable-doc)
+	$(MAKE) -C $(notdir $@) install-pdf
+endif
 	mkdir -p $(dir $@) && touch $@
 
 stamps/build-newlib-nano: $(NEWLIB_SRCDIR) $(NEWLIB_SRC_GIT) stamps/build-gcc-newlib-stage1
@@ -715,6 +740,9 @@ stamps/build-gcc-newlib-stage2: $(GCC_SRCDIR) $(GCC_SRC_GIT) stamps/build-newlib
 		CXXFLAGS_FOR_TARGET="-Os $(CXXFLAGS_FOR_TARGET)"
 	$(MAKE) -C $(notdir $@)
 	$(MAKE) -C $(notdir $@) install
+ifeq (@enable_doc@,--enable-doc)
+	$(MAKE) -C $(notdir $@) install-pdf
+endif
 	mkdir -p $(dir $@) && touch $@
 
 #
@@ -920,19 +948,32 @@ stamps/build-llvm-linux: $(LLVM_SRCDIR) $(LLVM_SRC_GIT) \
 	cd $(notdir $@) && \
 	    cmake $(LLVM_SRCDIR)/llvm \
 	    -DCMAKE_INSTALL_PREFIX=$(INSTALL_DIR) \
-	    -DCMAKE_BUILD_TYPE=Release \
 	    -DLLVM_TARGETS_TO_BUILD="RISCV" \
+	    -DLLVM_PARALLEL_COMPILE_JOBS=8 \
+	    -DLLVM_PARALLEL_LINK_JOBS=8 \
 	    -DLLVM_ENABLE_PROJECTS="clang;lld" \
-	    -DLLVM_ENABLE_RUNTIMES="compiler-rt;libcxx;libcxxabi;libunwind" \
+	    -DCLANG_DEFAULT_RTLIB=libgcc \
+	    -DCLANG_DEFAULT_CXX_STDLIB=libstdc++ \
+	    -DCLANG_DEFAULT_LINKER=lld \
+	    -DLLVM_INSTALL_TOOLCHAIN_ONLY=ON \
+	    -DLLVM_ENABLE_SPHINX=ON \
+	    -DLLVM_ENABLE_DOXYGEN=ON \
 	    -DLLVM_DEFAULT_TARGET_TRIPLE="$(LINUX_TUPLE)" \
 	    -DDEFAULT_SYSROOT="$(INSTALL_DIR)/sysroot" \
-	    -DLLVM_RUNTIME_TARGETS=$(call make_tuple,$(XLEN),linux-gnu) \
-	    -DLLVM_INSTALL_TOOLCHAIN_ONLY=On \
-	    -DLLVM_PARALLEL_LINK_JOBS=4
+	    -DLLVM_RUNTIME_TARGETS=$(LINUX_TUPLE) \
+	    -DCMAKE_BUILD_TYPE=Release
 	$(MAKE) -C $(notdir $@)
 	$(MAKE) -C $(notdir $@) install
-	cd $(INSTALL_DIR)/bin && ln -s clang $(LINUX_TUPLE)-clang
-	cd $(INSTALL_DIR)/bin && ln -s clang++ $(LINUX_TUPLE)-clang++
+ifeq (@enable_doc@,--enable-doc)
+	$(MAKE) -C $(notdir $@) docs-clang-html docs-lld-html docs-llvm-html
+	rm -rf $(DOC_DIR)/llvm
+	mkdir -p $(DOC_DIR)/llvm
+	for docloc in docs tools/clang/docs tools/lld/docs;\
+		do mkdir -p $(DOC_DIR)/llvm/$${docloc} \
+			&& cp -rf $(notdir $@)/$${docloc}/html $(DOC_DIR)/llvm/$${docloc} ; done
+endif
+	cd $(INSTALL_DIR)/bin && ln -sf clang $(LINUX_TUPLE)-clang
+	cd $(INSTALL_DIR)/bin && ln -sf clang++ $(LINUX_TUPLE)-clang++
 	mkdir -p $(dir $@) && touch $@
 
 stamps/build-llvm-newlib: $(LLVM_SRCDIR) $(LLVM_SRC_GIT) \
@@ -946,19 +987,28 @@ stamps/build-llvm-newlib: $(LLVM_SRCDIR) $(LLVM_SRC_GIT) \
 	   -DLLVM_ENABLE_PROJECTS="clang;lld" \
 	   -DLLVM_PARALLEL_COMPILE_JOBS=8 \
 	   -DLLVM_PARALLEL_LINK_JOBS=8 \
-	   -DCMAKE_BUILD_TYPE=Release \
 	   -DCLANG_DEFAULT_RTLIB=libgcc \
 	   -DCLANG_DEFAULT_CXX_STDLIB=libstdc++ \
 	   -DCLANG_DEFAULT_LINKER=lld \
 	   -DLLVM_INSTALL_TOOLCHAIN_ONLY=ON \
+	   -DLLVM_ENABLE_SPHINX=ON \
+	   -DLLVM_ENABLE_DOXYGEN=ON \
 	   -DDEFAULT_SYSROOT=$(INSTALL_DIR)/$(NEWLIB_TUPLE) \
 	   -DLLVM_DEFAULT_TARGET_TRIPLE="$(NEWLIB_TUPLE)" \
 	   -DDEFAULT_SYSROOT="$(INSTALL_DIR)/$(NEWLIB_TUPLE)" \
 	   -DCMAKE_BUILD_TYPE=Release
 	$(MAKE) -C $(notdir $@)
 	$(MAKE) -C $(notdir $@) install
-	cd $(INSTALL_DIR)/bin && ln -s clang $(NEWLIB_TUPLE)-clang
-	cd $(INSTALL_DIR)/bin && ln -s clang++ $(NEWLIB_TUPLE)-clang++
+ifeq (@enable_doc@,--enable-doc)
+	$(MAKE) -C $(notdir $@) docs-clang-html docs-lld-html docs-llvm-html
+	rm -rf $(DOC_DIR)/llvm
+	mkdir -p $(DOC_DIR)/llvm
+	for docloc in docs tools/clang/docs tools/lld/docs;\
+		do mkdir -p $(DOC_DIR)/llvm/$${docloc} \
+			&& cp -rf $(notdir $@)/$${docloc}/html $(DOC_DIR)/llvm/$${docloc} ; done
+endif
+	cd $(INSTALL_DIR)/bin && ln -sf clang $(NEWLIB_TUPLE)-clang
+	cd $(INSTALL_DIR)/bin && ln -sf clang++ $(NEWLIB_TUPLE)-clang++
 	mkdir -p $(dir $@) && touch $@
 
 stamps/build-dejagnu: $(DEJAGNU_SRCDIR) $(DEJAGNU_SRC_GIT)
