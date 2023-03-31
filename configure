@@ -603,6 +603,7 @@ enable_llvm
 enable_gdb
 with_guile
 with_system_zlib
+with_host
 configure_host
 target_cxxflags
 target_cflags
@@ -3513,6 +3514,14 @@ if test "x$with_host" != xdefault; then :
 
 else
   configure_host=""
+
+fi
+
+if test "x$with_host" != xdefault; then :
+  with_host=$with_host
+
+else
+  with_host=""
 
 fi
 

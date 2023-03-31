@@ -188,6 +188,10 @@ AS_IF([test "x$with_host" != xdefault],
 	[AC_SUBST(configure_host,--host=$with_host)],
 	[AC_SUBST(configure_host,"")])
 
+AS_IF([test "x$with_host" != xdefault],
+	[AC_SUBST(with_host,$with_host)],
+	[AC_SUBST(with_host,"")])
+
 AC_ARG_WITH(system-zlib,
 	[AS_HELP_STRING([--without-system-zlib],
 		[use the builtin copy of zlib from GCC])],
