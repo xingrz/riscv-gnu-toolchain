@@ -104,6 +104,20 @@ MUSL_CXX_FOR_TARGET ?= $(MUSL_TUPLE)-g++
 
 CONFIGURE_HOST   = @configure_host@
 
+ifneq ($(findstring mingw,@with_host@),)
+# must use posix version of mingw gcc, disable thread for windows build, build static version with static libgcc/libstdc++
+LLVM_CMAKE_COMPILE_OPTS = -DCMAKE_C_COMPILER=@with_host@-gcc-posix -DCMAKE_CXX_COMPILER=@with_host@-g++-posix \
+			-DLLVM_ENABLE_THREADS=OFF -DLLVM_BUILD_STATIC=ON -DCMAKE_SYSTEM_NAME=Windows
+EXE_SUFFIX = .exe
+FIND_STRIP_FILES = find $$chkdir -type f -name "*.exe" -or -name "*.dll"
+STRIP_CMD = @with_host@-strip
+else
+LLVM_CMAKE_COMPILE_OPTS =
+EXE_SUFFIX =
+FIND_STRIP_FILES = find $$chkdir -type f | xargs file | grep "not stripped" | cut -d ":" -f1
+STRIP_CMD = @with_host@-strip
+endif
+
 all: @default_target@
 newlib: stamps/build-gcc-newlib-stage2
 linux: stamps/build-gcc-linux-stage2
@@ -955,9 +969,8 @@ stamps/build-llvm-linux: $(LLVM_SRCDIR) $(LLVM_SRC_GIT) \
 	cd $(notdir $@) && \
 	    cmake $(LLVM_SRCDIR)/llvm \
 	    -DCMAKE_INSTALL_PREFIX=$(INSTALL_DIR) \
+	    $(LLVM_CMAKE_COMPILE_OPTS) \
 	    -DLLVM_TARGETS_TO_BUILD="RISCV" \
-	    -DLLVM_PARALLEL_COMPILE_JOBS=8 \
-	    -DLLVM_PARALLEL_LINK_JOBS=8 \
 	    -DLLVM_ENABLE_PROJECTS="clang;lld" \
 	    -DCLANG_DEFAULT_RTLIB=libgcc \
 	    -DCLANG_DEFAULT_CXX_STDLIB=libstdc++ \
@@ -981,8 +994,8 @@ ifeq (@enable_doc@,--enable-doc)
 		do mkdir -p $(DOC_DIR)/llvm/$${docloc} \
 			&& cp -rf $(notdir $@)/$${docloc}/html $(DOC_DIR)/llvm/$${docloc} ; done
 endif
-	cd $(INSTALL_DIR)/bin && ln -sf clang $(LINUX_TUPLE)-clang
-	cd $(INSTALL_DIR)/bin && ln -sf clang++ $(LINUX_TUPLE)-clang++
+	cd $(INSTALL_DIR)/bin && ln -sf clang$(EXE_SUFFIX) $(LINUX_TUPLE)-clang$(EXE_SUFFIX)
+	cd $(INSTALL_DIR)/bin && ln -sf clang++$(EXE_SUFFIX) $(LINUX_TUPLE)-clang++$(EXE_SUFFIX)
 	mkdir -p $(dir $@) && touch $@
 
 stamps/build-llvm-newlib: $(LLVM_SRCDIR) $(LLVM_SRC_GIT) \
@@ -992,10 +1005,9 @@ stamps/build-llvm-newlib: $(LLVM_SRCDIR) $(LLVM_SRC_GIT) \
 	cd $(notdir $@) && \
 	   cmake $(LLVM_SRCDIR)/llvm \
 	   -DCMAKE_INSTALL_PREFIX=$(INSTALL_DIR) \
+	   $(LLVM_CMAKE_COMPILE_OPTS) \
 	   -DLLVM_TARGETS_TO_BUILD="RISCV" \
 	   -DLLVM_ENABLE_PROJECTS="clang;lld" \
-	   -DLLVM_PARALLEL_COMPILE_JOBS=8 \
-	   -DLLVM_PARALLEL_LINK_JOBS=8 \
 	   -DCLANG_DEFAULT_RTLIB=libgcc \
 	   -DCLANG_DEFAULT_CXX_STDLIB=libstdc++ \
 	   -DCLANG_DEFAULT_LINKER=lld \
@@ -1018,8 +1030,8 @@ ifeq (@enable_doc@,--enable-doc)
 		do mkdir -p $(DOC_DIR)/llvm/$${docloc} \
 			&& cp -rf $(notdir $@)/$${docloc}/html $(DOC_DIR)/llvm/$${docloc} ; done
 endif
-	cd $(INSTALL_DIR)/bin && ln -sf clang $(NEWLIB_TUPLE)-clang
-	cd $(INSTALL_DIR)/bin && ln -sf clang++ $(NEWLIB_TUPLE)-clang++
+	cd $(INSTALL_DIR)/bin && ln -sf clang$(EXE_SUFFIX) $(NEWLIB_TUPLE)-clang$(EXE_SUFFIX)
+	cd $(INSTALL_DIR)/bin && ln -sf clang++$(EXE_SUFFIX) $(NEWLIB_TUPLE)-clang++$(EXE_SUFFIX)
 	mkdir -p $(dir $@) && touch $@
 
 stamps/build-dejagnu: $(DEJAGNU_SRCDIR) $(DEJAGNU_SRC_GIT)
@@ -1178,6 +1190,14 @@ distclean: clean
 
 # All of the packages install themselves, so our install target does nothing.
 install:
+
+
+# Strip binaries after packages installed
+strip:
+	@echo "Strip debug symbols of all installed binaries in $(INSTALL_DIR)"
+	cd $(INSTALL_DIR) && for chkdir in bin libexec lib $(NEWLIB_TUPLE) $(LINUX_TUPLE); \
+		do if [ -d $$chkdir ] ; then for stpfile in $$($(FIND_STRIP_FILES)); \
+		do echo "Strip debug symbols of $$stpfile" ; strip -s $$stpfile || true ; done; fi; done
 
 # Rebuilding Makefile.
 Makefile: $(srcdir)/Makefile.in config.status
