@@ -8,4 +8,4 @@ Makefile
 /build-*/
 /install-newlib-nano/
 /stamps/
-/LocalBuild*/
+/Local*/
