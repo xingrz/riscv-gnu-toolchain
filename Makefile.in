@@ -104,17 +104,18 @@ MUSL_CXX_FOR_TARGET ?= $(MUSL_TUPLE)-g++
 
 CONFIGURE_HOST   = @configure_host@
 
+FIND_IGNORE = -not \( -name *.o -o -name *.py -o -name *.h -o -name *.specs -o -name *.def \)
 ifneq ($(findstring mingw,@with_host@),)
 # must use posix version of mingw gcc, disable thread for windows build, build static version with static libgcc/libstdc++
 LLVM_CMAKE_COMPILE_OPTS = -DCMAKE_C_COMPILER=@with_host@-gcc-posix -DCMAKE_CXX_COMPILER=@with_host@-g++-posix \
 			-DLLVM_ENABLE_THREADS=OFF -DLLVM_BUILD_STATIC=ON -DCMAKE_SYSTEM_NAME=Windows
 EXE_SUFFIX = .exe
-FIND_STRIP_FILES = find $$chkdir -type f -name "*.exe" -or -name "*.dll"
+FIND_STRIP_FILES = find $$chkdir -type f -name "*.exe" -or -name "*.dll" -and $(FIND_IGNORE)
 STRIP_CMD = @with_host@-strip
 else
 LLVM_CMAKE_COMPILE_OPTS =
 EXE_SUFFIX =
-FIND_STRIP_FILES = find $$chkdir -type f | xargs file | grep "not stripped" | cut -d ":" -f1
+FIND_STRIP_FILES = find $$chkdir -type f $(FIND_IGNORE) | xargs file | grep "not stripped" | cut -d ":" -f1
 STRIP_CMD = @with_host@-strip
 endif
 
