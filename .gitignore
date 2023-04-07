@@ -3,6 +3,8 @@ build
 config.log
 config.status
 Makefile
+# ignore libncrt repo
+libncrt*
 .DS_Store
 !/regression/Makefile
 /build-*/
