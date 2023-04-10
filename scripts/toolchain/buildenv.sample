@@ -1,0 +1,37 @@
+# Sample build.env can be used as build.env template
+
+# toolchain type: newlibc or glibc
+TOOLTYPE=newlibc
+# toolchain host: win32 or linux64
+TOOLHOST=linux64
+# toolchain version, / or \ isnot allowed, such as 2023.04-devbuild or 2023.04.10
+TOOLVER=2023.04-devbuild
+# arguments passed to --with-multilib-generator
+# if not empty, it will enable multilib build
+# complex version: consider Zc and Xxldsp
+MULTILIBGEN="rv32emc-ilp32e--;rv32emac-ilp32e--;rv32imc-ilp32--;rv32imac-ilp32--;rv32imafc-ilp32f--;rv32imafdc-ilp32d--;rv32imac_zba_zbb_zbc_zbs-ilp32--;rv32imafc_zba_zbb_zbc_zbs-ilp32f--;rv32imafdc_zba_zbb_zbc_zbs-ilp32d--;rv32ima_zca_zcb_zcmp_zcmt-ilp32--;rv32imaf_zca_zcb_zcf_zcmp_zcmt-ilp32f--;rv32imafd_zca_zcb_zcf_zcd-ilp32d--;rv32ima_zca_zcb_zcmp_zcmt_zba_zbb_zbc_zbs-ilp32--;rv32imaf_zca_zcb_zcf_zcmp_zcmt_zba_zbb_zbc_zbs-ilp32f--;rv32imafd_zca_zcb_zcf_zcd_zba_zbb_zbc_zbs-ilp32d--;rv32imac_xxldsp-ilp32--;rv32imafc_xxldsp-ilp32f--;rv32imafdc_xxldsp-ilp32d--;rv32imac_zba_zbb_zbc_zbs_xxldsp-ilp32--;rv32imafc_zba_zbb_zbc_zbs_xxldsp-ilp32f--;rv32imafdc_zba_zbb_zbc_zbs_xxldsp-ilp32d--;rv32ima_zca_zcb_zcmp_zcmt_xxldsp-ilp32--;rv32imaf_zca_zcb_zcf_zcmp_zcmt_xxldsp-ilp32f--;rv32imafd_zca_zcb_zcf_zcd_xxldsp-ilp32d--;rv32ima_zca_zcb_zcmp_zcmt_zba_zbb_zbc_zbs_xxldsp-ilp32--;rv32imaf_zca_zcb_zcf_zcmp_zcmt_zba_zbb_zbc_zbs_xxldsp-ilp32f--;rv32imafd_zca_zcb_zcf_zcd_zba_zbb_zbc_zbs_xxldsp-ilp32d--;rv64imac-lp64--;rv64imafc-lp64f--;rv64imafdc-lp64d--;rv64imac_zba_zbb_zbc_zbs-lp64--;rv64imafc_zba_zbb_zbc_zbs-lp64f--;rv64imafdc_zba_zbb_zbc_zbs-lp64d--;rv64ima_zca_zcb_zcmp_zcmt-lp64--;rv64imaf_zca_zcb_zcf_zcmp_zcmt-lp64f--;rv64imafd_zca_zcb_zcf_zcd-lp64d--;rv64ima_zca_zcb_zcmp_zcmt_zba_zbb_zbc_zbs-lp64--;rv64imaf_zca_zcb_zcf_zcmp_zcmt_zba_zbb_zbc_zbs-lp64f--;rv64imafd_zca_zcb_zcf_zcd_zba_zbb_zbc_zbs-lp64d--;"
+# Simple version:
+#MULTILIBGEN="rv32emc-ilp32e--;rv32emac-ilp32e--;rv32imc-ilp32--;rv32imac-ilp32--;rv32imafc-ilp32f--;rv32imafdc-ilp32d--;rv32imac_zba_zbb_zbc_zbs-ilp32--;rv32imafc_zba_zbb_zbc_zbs-ilp32f--;rv32imafdc_zba_zbb_zbc_zbs-ilp32d--;rv64imac-lp64--;rv64imafc-lp64f--;rv64imafdc-lp64d--;rv64imac_zba_zbb_zbc_zbs-lp64--;rv64imafc_zba_zbb_zbc_zbs-lp64f--;rv64imafdc_zba_zbb_zbc_zbs-lp64d--;"
+# build toolchain with multilib or not, 0 or 1
+# if MULTILIBGEN is not empty, will do multilib by default
+DOMULTILIB=1
+# strip toolchain after build, 0 or 1
+DOSTRIP=1
+# build llvm or not, 0 or 1
+DOLLVM=1
+# build toolchain or not, 0 or 1
+DOBUILD=1
+# archive toolchain or not, 0 or 1
+DOARCHIVE=1
+# build libncrt or not, 0 or 1
+DOLIBNCRT=1
+# libncrt build config, such riscv64-unknown-elf
+LIBNCRTBLDCFG=riscv64-unknown-elf
+# build doc or not, 0 or 1
+DODOC=1
+# clean build directory after successfully build, 0 or 1
+DOCLEAN=1
+# default arch/abi/isaspec/tune configuration
+DEFRVCFG="--with-arch=rv64imc --with-abi=lp64"
+# default build jobs
+JOBS=16

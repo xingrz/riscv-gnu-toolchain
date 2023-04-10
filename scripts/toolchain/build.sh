@@ -10,7 +10,9 @@ SCRIPTDIR=$(readlink -f $SCRIPTDIR)
 # MULTILIBGEN: multilib gen configuration
 # DOMULTILIB: enable multilib build, default yes
 # DOSTRIP: strip binary or not, default yes
+# DOCONF: configure toolchain or not, default yes
 # DOBUILD: build toolchain or not, default yes
+# DOREBUILD: rebuild toolchain using last build environment, will not configure toolchain, default no
 # DOLLVM: build llvm or not, default yes
 # DODOC: build toolchain doc, default no
 # DOLIBNCRT: build libncrt for newlibc toolchain, default yes
@@ -23,6 +25,8 @@ toolhost=${TOOLHOST:-}
 toolver=${TOOLVER:-}
 multilibgen=${MULTILIBGEN:-}
 domultilib=${DOMULTILIB:-}
+doconf=${DOCONF:-1}
+dorebuild=${DOREBUILD:-}
 dostrip=${DOSTRIP:-1}
 dollvm=${DOLLVM:-1}
 dobuild=${DOBUILD:-1}
@@ -39,11 +43,20 @@ jobs=${JOBS:-16}
 confopts=${1:-}
 
 ## sample usage
+## Use case 1:
+## You can copy scripts/toolchain/buildenv.sample to build.env
+## and then modify the build.env as you expected, then source this environment file
+# $ BUILDENV=build.env source scripts/toolchain/setup_env.sh
+## then build this toolchain as you want
+# $ ./scripts/toolchain/build.sh
+## you can overwrite some predefined variable like this, for example, you want to change TOOLVER to 2023.04
+# $ TOOLVER=2023.04 ./scripts/toolchain/build.sh
+## Use case 2:
 ## This command below will build toolchain, document and libncrt, and toolchain version set to 2023.04, configure options used extra followed by build.sh
-## when toolchain build successfully, it will archive the built toolchain, and clean this build
-# DOLIBNCRT=1 DOARCHIVE=1 DOBUILD=1 DODOC=1 DOCLEAN=1 TOOLVER=2023.04 ./scripts/toolchain/build.sh "--enable-multilib --with-multilib-generator=rv32emc-ilp32e--;rv32emac-ilp32e--;rv32imc-ilp32--;rv32imac-ilp32--zfh*zfhmin*zve32x;rv32imafc-ilp32f--zfh*zfhmin*zve32f;rv32imafdc-ilp32d--zfh*zfhmin*zve32f;rv32imac_zba_zbb_zbc_zbs-ilp32--zfh*zfhmin*zbkb_zbkc_zbkx_zk*zve32x;rv32imafc_zba_zbb_zbc_zbs-ilp32f--zfh*zfhmin*zbkb_zbkc_zbkx_zk*zve32f;rv32imafdc_zba_zbb_zbc_zbs-ilp32d--zfh*zfhmin*zbkb_zbkc_zbkx_zk*zve32f;rv64imac-lp64--xxldsp*xxldspn1*zfhmin*zfh*v;rv64imafc-lp64f--xxldsp*xxldspn1*zfhmin*zfh*v;rv64imafdc-lp64d--xxldsp*xxldspn1*zfhmin*zfh*v;rv64imac_zba_zbb_zbc_zbs-lp64--xxldsp*xxldspn1*zfhmin*zfh*zbkb_zbkc_zbkx_zk*v;rv64imafc_zba_zbb_zbc_zbs-lp64f--xxldsp*xxldspn1*zfhmin*zfh*zbkb_zbkc_zbkx_zk*v;rv64imafdc_zba_zbb_zbc_zbs-lp64d--xxldsp*xxldspn1*zfhmin*zfh*zbkb_zbkc_zbkx_zk*v"
+## when toolchain build successfully, it will archive the built toolchain, and clean this build, tool host is guess by docker image os environment
+# $ DOLIBNCRT=1 DOARCHIVE=1 DOBUILD=1 DODOC=1 DOCLEAN=1 TOOLVER=2023.04 ./scripts/toolchain/build.sh "rv32emc-ilp32e--;rv32emac-ilp32e--;rv32imc-ilp32--;rv32imac-ilp32--;rv32imafc-ilp32f--;rv32imafdc-ilp32d--;rv64imac-lp64--;rv64imafc-lp64f--;rv64imafdc-lp64d--;"
 
-source $SCRIPTDIR/env.sh
+source $SCRIPTDIR/utils.sh
 
 echo "INFO: Build for $toolhost machine, library type $tooltype in 3s"
 sleep 3
@@ -76,7 +89,7 @@ fi
 if [[ ! "$confopts" =~ "--with-multilib-generator" ]] ; then
     if [ "x$multilibgen" != "x" ] ; then
         echo "INFO: Enable multilib generator of $multilibgen"
-        confopts="$confopts --enable-multilib --with-multilib-generator=\"$multilibgen\""
+        confopts="$confopts --enable-multilib --with-multilib-generator=$multilibgen"
     elif [ "x$domultilib" == "x1" ] ; then
         echo "INFO: Enable multilib build with default multilib configuration"
         confopts="$confopts --enable-multilib"
@@ -86,8 +99,8 @@ else
 fi
 
 if [[ ! "$confopts" =~ "--with-arch=" ]] && [[ "x$defrvcfg" =~ "--with-arch=" ]] ; then
-    echo "INFO: Use default march and mabi config: $defrvcfg"
-    confopts="$confopts $defmarchabi"
+    echo "INFO: Use default arch/abi/isaspec/tune config: $defrvcfg"
+    confopts="$confopts $defrvcfg"
 fi
 
 echo "INFO: Change directory to build folder $toolbuilddir"
@@ -97,10 +110,18 @@ echo "INFO: Generate build stamp and repo information into $toolprefix"
 describe_repo "$toolsrcdir" "$toolprefix/gitrepo.txt"
 describe_build "$toolprefix/build.txt"
 
-echo "INFO: Do configure and install to $toolprefix, configure command as below!"
-confcmd="${toolsrcdir}/configure --prefix=${toolprefix} ${confopts}"
-echo "INFO: ${confcmd}"
-$confcmd
+if [ "x$dorebuild" == "x1" ] ; then
+    echo "WARN: Rebuild toolchain in $toolbuilddir now, will not do toolchain configure!"
+else
+    if [ "x$doconf" == "x1" ] ; then
+        echo "INFO: Do configure and install to $toolprefix, configure command as below!"
+        confcmd="${toolsrcdir}/configure --prefix=${toolprefix} ${confopts}"
+        echo "INFO: ${confcmd}"
+        $confcmd
+    else
+        echo "INFO: Will not do toolchain configure!"
+    fi
+fi
 
 if [ "x$dobuild" == "x1" ] ; then
     echo "INFO: Do toolchain build for target $maketarget in 3s"
@@ -121,7 +142,7 @@ fi
 popd
 
 if [ "x$tooltype" == "xnewlibc" ] && [ "x$dolibncrt" == "x1" ] && [ "x$dosuc" == "x0" ]; then
-    if ls $toolprefix/bin/*-gcc > /dev/null 2>&1 ; then
+    if ls $toolprefix/bin/*-gcc* > /dev/null 2>&1 ; then
         echo "INFO: Build nuclei c runtime library for $tooltype toolchain"
         if [ "x$toolhost" == "xlinux64" ] ; then
             echo "INFO: Setup toolchain PATH for build libncrt"
@@ -154,8 +175,8 @@ else
     echo "INFO: Find the build directory in $toolbuilddir, remove it by yourself!"
 fi
 if [ "x$dosuc" == "x0" ] ; then
-    if [ "x$dobuild" == "x1" ] && [ "x$doarchive" == "x1" ] ; then
-        echo "INFO: Archive toolchain and source code due to successful build!"
+    if [ "x$doarchive" == "x1" ] ; then
+        echo "INFO: Archive the toolchain source code and built toolchain in $toolprefix!"
         archive_gitrepo
         archive_toolchain
     fi

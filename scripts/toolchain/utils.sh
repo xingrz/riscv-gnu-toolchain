@@ -7,6 +7,7 @@ tooltype=${TOOLTYPE:-}
 toolhost=${TOOLHOST:-}
 toolver=${TOOLVER:-}
 vendor=${TOOLVENDOR:-nuclei}
+dorebuild=${DOREBUILD:-}
 
 # toolchain source directory
 toolsrcdir=$(readlink -f $SCRIPTDIR/../..)
@@ -32,8 +33,13 @@ if [ "x$toolhost" != "xwin32" ] && [ "x$toolhost" != "xlinux64" ] ; then
 fi
 
 if [[ "$CI_PIPELINE_ID" =~ ^[0-9]+$ ]] ; then
-    LocalBuilds=/work/toolchain/builds
-    LocalInstalls=/work/toolchain/install
+    workroot=/Local/gitlab-runner/work
+    if [ -d $workroot ] ; then
+        echo "INFO: Maybe in docker environment now!"
+        workroot=/work
+    fi
+    LocalBuilds=$workroot/toolchain/builds
+    LocalInstalls=$workroot/toolchain/install
     if [ "x$doclean" == "x" ] ; then
         echo "Do clean build folder when sucessfully built"
         doclean=1
@@ -49,17 +55,43 @@ fi
 
 LocalInstalls=${LocalInstalls}/${toolhost}/${tooltype}
 
-if [ "x$toolver" != "x" ] ; then
-    toolprefix=$LocalInstalls/$toolver/$TOOLNAME
-    toolbuilddir=$LocalBuilds/${toolver}_$BUILDDATE
-elif [ "x${CI_JOB_ID}" != "x" ] ; then
-    toolprefix=$LocalInstalls/job${CI_JOB_ID}/$TOOLNAME
-    toolbuilddir=$LocalBuilds/job${CI_JOB_ID}
+savebldenv=$(pwd)/lastbuild_${toolhost}_${tooltype}.env
+if [ "x$dorebuild" == "x1" ] ; then
+    if [ ! -f $savebldenv ] ; then
+        echo "ERROR: Could not find last build save variable file $savebldenv, please check!"
+        exit 1
+    fi
+    set -a
+    source $savebldenv
+    set +a
+    if [ "x$toolprefix" == "x" ] || [ "x$toolbuilddir" == "x" ] ; then
+        echo "ERROR: toolprefix or toolbuilddir is not provided in $savebldenv, please check!"
+        exit 1
+    fi
+    if [ ! -f $toolbuilddir/Makefile ] ; then
+        echo "ERROR: There is no Makefile in $toolbuilddir, please check!"
+        exit 1
+    fi
 else
-    toolprefix=$LocalInstalls/$BUILDDATE/$TOOLNAME
-    toolbuilddir=$LocalBuilds/$BUILDDATE
+    if [ "x$toolver" != "x" ] ; then
+        toolprefix=$LocalInstalls/${toolver}/$TOOLNAME
+        if [ "x${CI_JOB_ID}" != "x" ] ; then
+            toolbuilddir=$LocalBuilds/${toolver}_job${CI_JOB_ID}
+        else
+            toolbuilddir=$LocalBuilds/${toolver}_$BUILDDATE
+        fi
+    elif [ "x${CI_JOB_ID}" != "x" ] ; then
+        toolprefix=$LocalInstalls/job${CI_JOB_ID}/$TOOLNAME
+        toolbuilddir=$LocalBuilds/job${CI_JOB_ID}
+    else
+        toolprefix=$LocalInstalls/$BUILDDATE/$TOOLNAME
+        toolbuilddir=$LocalBuilds/$BUILDDATE
+    fi
+    echo "INFO: Save build prefix and build directory environment variable to $savebldenv"
+    echo "toolprefix=${toolprefix}" > $savebldenv
+    echo "toolbuilddir=${toolbuilddir}" >> $savebldenv
 fi
-toolbasedir="${toolprefix}/../"
+toolbasedir="${toolprefix}/.."
 
 function describe_repo {
     local repodir=${1}
@@ -91,7 +123,7 @@ function describe_build {
 
 function gitarchive() {
     local repotgz=$1
-    if which git-archive-all ; then
+    if which git-archive-all > /dev/null 2>&1 ; then
         git-archive-all ${repotgz}
     else
         git ls-files --recurse-submodules | tar --quoting-style=locale -czf ${repotgz} -T-
@@ -171,9 +203,8 @@ function zip_toolchain() {
     fi
     local toolname=${2:-$(basename $tooldir)}
 
-    echo "Archive toolchain in $tooldir to $toolname.zip"
-
     pushd $(dirname $tooldir)
+    echo "Archive toolchain in $tooldir to $toolname.zip"
     command rm -f ${toolname}.zip
     zip -9 -q -r ${toolname}.zip $(basename $tooldir)
     popd
@@ -181,7 +212,7 @@ function zip_toolchain() {
 
 function archive_toolchain() {
     local tooldir=${toolprefix}
-    local basedir=${toolbasedir}
+    local basedir=$(readlink -f ${toolbasedir})
     local toolname=$basedir/${vendor}_riscv_${tooltype}_prebuilt_${toolhost}_$(basename $basedir)
 
     if [ "x$toolhost" == "xwin32" ] ; then
