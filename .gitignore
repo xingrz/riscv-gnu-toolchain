@@ -5,6 +5,8 @@ config.status
 Makefile
 # ignore libncrt repo
 libncrt*
+# ignore *.env
+*.env
 .DS_Store
 !/regression/Makefile
 /build-*/
