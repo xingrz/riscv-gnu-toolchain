@@ -8,11 +8,15 @@ toolhost=${TOOLHOST:-}
 toolver=${TOOLVER:-}
 vendor=${TOOLVENDOR:-nuclei}
 dorebuild=${DOREBUILD:-}
+dorelease=${DORELEASE:-}
 
 # toolchain source directory
 toolsrcdir=$(readlink -f $SCRIPTDIR/../..)
 BUILDDATE=${BUILDDATE:-$(date -u +%Y%m%d_%H%M%S)}
 TOOLNAME=gcc
+
+# share toolchain location for nuclei server to access
+ShareLoc=${SHARELOC:-/home/share/devtools/toolchain/nuclei_gnu}
 
 maketarget="newlib"
 if [ "$tooltype" == "xnewlibc" ] ; then
@@ -25,8 +29,12 @@ else
 fi
 
 if [ "x$toolhost" != "xwin32" ] && [ "x$toolhost" != "xlinux64" ] ; then
-    if cat /etc/issue | grep -i ubuntu ; then
-        toolhost="win32"
+    if [ "x$dorelease" != "x1" ] ; then
+        if cat /etc/issue | grep -i ubuntu ; then
+            toolhost="win32"
+        else
+            toolhost="linux64"
+        fi
     else
         toolhost="linux64"
     fi
@@ -54,6 +62,7 @@ else
 fi
 
 LocalInstalls=${LocalInstalls}/${toolhost}/${tooltype}
+ShareInstalls=${ShareLoc}/${toolhost}/${tooltype}
 
 savebldenv=$(pwd)/lastbuild_${toolhost}_${tooltype}.env
 if [ "x$dorebuild" == "x1" ] ; then
@@ -61,6 +70,7 @@ if [ "x$dorebuild" == "x1" ] ; then
         echo "ERROR: Could not find last build save variable file $savebldenv, please check!"
         exit 1
     fi
+    echo "INFO: Source last build environment file $savebldenv"
     set -a
     source $savebldenv
     set +a
@@ -87,9 +97,12 @@ else
         toolprefix=$LocalInstalls/$BUILDDATE/$TOOLNAME
         toolbuilddir=$LocalBuilds/$BUILDDATE
     fi
-    echo "INFO: Save build prefix and build directory environment variable to $savebldenv"
-    echo "toolprefix=${toolprefix}" > $savebldenv
-    echo "toolbuilddir=${toolbuilddir}" >> $savebldenv
+    # only save environment when no do release
+    if [ "x$dorelease" != "x1" ] ; then
+        echo "INFO: Save build prefix and build directory environment variable to $savebldenv"
+        echo "toolprefix=${toolprefix}" > $savebldenv
+        echo "toolbuilddir=${toolbuilddir}" >> $savebldenv
+    fi
 fi
 toolbasedir="${toolprefix}/.."
 
@@ -220,4 +233,41 @@ function archive_toolchain() {
     else
         tar_toolchain $tooldir $toolname
     fi
+}
+
+function sync_toolchain() {
+    local localinstall=${1:-${toolbasedir}}
+    local symlink=${2:-}
+    if [ ! -d ${localinstall} ] ; then
+        echo "ERROR: local toolchain directory ${localinstall} not exist!"
+        return 1
+    else
+        localinstall=$(readlink -f $localinstall)
+    fi
+
+    if [ ! -d ${ShareLoc} ] ; then
+        echo "ERROR: $ShareLoc directory not exist, maybe you are in docker environment!"
+        return 1
+    fi
+
+    if [ ! -d ${ShareInstalls} ] ; then
+        echo "INFO: Create share toolchain install directory ${ShareInstalls}"
+        mkdir -p ${ShareInstalls}
+    fi
+    local basedir=$(basename ${localinstall})
+    if [ -d ${ShareInstalls}/${basedir} ] ; then
+        echo "INFO: Removing existing ${ShareInstalls}/${basedir}"
+        rm -rf ${ShareInstalls}/${basedir}
+    fi
+    echo "INFO: Copy $localinstall to $ShareInstalls"
+    command cp -rf ${localinstall} ${ShareInstalls}
+    echo "INFO: Toolchain copied to ${ShareInstalls}/${basedir}"
+    if [ "x$symlink" != "x" ] ; then
+        pushd ${ShareInstalls}
+        echo "INFO: Symbolic link from ${basedir} -> ${symlink} in ${ShareInstalls}"
+        rm -f $symlink
+        command ln -sf $basedir $symlink
+        popd
+    fi
+    return 0
 }
