@@ -39,6 +39,9 @@ stages:
     # https://serverfault.com/questions/469052/ssh-failing-from-script-working-on-command-line-git
     - ssh-keyscan gito > ~/.ssh/known_hosts
     - ssh-keyscan gito.corp.nucleisys.com >> ~/.ssh/known_hosts
+    - git remote -v
+    - echo $CI_REPOSITORY_URL
+    - git remote set-url origin git@gito.corp.nucleisys.com:software/devtools/riscv-gnu-toolchain.git
     # prepare toolchain source code
     - CLONE_DEPTH=1 ./scripts/toolchain/prepsrc.sh
     # set the toolver to branch name or tag name, see https://docs.gitlab.com/ee/ci/variables/predefined_variables.html
@@ -98,7 +101,7 @@ cleanbuild:
     - export TOOLHOST=${citoolhost}
     - CLEANINSTALL=1 ./scripts/toolchain/cleanup.sh
   tags:
-    - env::native
+    - env::shell
     - host::whss4
 
 ## Job for deploy document to internal server
@@ -123,5 +126,5 @@ release:
     - export TOOLHOST=linux64
     - ./scripts/toolchain/release.sh
   tags:
-    - env::native
+    - env::shell
     - host::whss4
