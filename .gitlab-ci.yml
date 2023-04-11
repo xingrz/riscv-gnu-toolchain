@@ -1,0 +1,123 @@
+variables:
+  SHARELOC: /home/share/devtools
+  IMGSVR: rego.corp.nucleisys.com/software
+  LINBUILDIMG: "gnutoolchain-centos6"
+  WINBUILDIMG: "gnutoolchain-ubuntu18.04"
+  IMGTAG: "latest"
+  JOBS: 32
+
+workflow:
+  rules:
+    - if: $CI_COMMIT_MESSAGE =~ /draft|wip|stash/i
+      when: never
+    - if: $CI_COMMIT_BRANCH =~ /nuclei|feature/
+    - if: $CI_COMMIT_BRANCH =~ /nuclei/ && $CI_COMMIT_TAG
+    - if: $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /nuclei|feature/ && $CI_PIPELINE_SOURCE == "merge_request_event"
+
+stages:
+  - build
+  - test
+  - deploy
+
+## Job template
+.build_job_template: &build_job_template_default
+  stage: build
+  interruptible: true
+  except:
+    changes:
+      - LICENSE
+      - "*.md"
+  before_script:
+    - command -v ssh-agent >/dev/null || ( apt-get update -y && apt-get install openssh-client -y )
+    - eval $(ssh-agent -s)
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.
+    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+    # important: need to avoid git ssh asking yes/no when clone
+    # https://serverfault.com/questions/469052/ssh-failing-from-script-working-on-command-line-git
+    - ssh-keyscan gito > ~/.ssh/known_hosts
+    # prepare toolchain source code
+    - CLONE_DEPTH=1 ./scripts/toolchain/prepsrc.sh
+    # set the toolver to branch name or tag name, see https://docs.gitlab.com/ee/ci/variables/predefined_variables.html
+    - export citoolver=${CI_COMMIT_REF_SLUG}${CI_MERGE_REQUEST_PROJECT_ID}
+    - echo "Build for toolchain version $citoolver, toolchain type $citooltype"
+  tags:
+    - env::docker
+    - build::toolchain
+    - host::whss4
+
+## Job for build linux host toolchain
+build_linux:
+  <<: *build_job_template_default
+  image: $IMGSVR/$LINBUILDIMG:$IMGTAG
+  parallel:
+    matrix:
+      - citooltype: ["newlibc", "glibc"]
+  script:
+    # copy the template
+    - cp scripts/toolchain/buildenv.sample build.env
+    - BUILDENV=build.env source scripts/toolchain/setup_env.sh
+    - export TOOLVER=${citoolver}
+    - export TOOLTYPE=${citooltype}
+    - export TOOLHOST=linux64
+    - ./scripts/toolchain/build.sh
+
+## Job for build windows host toolchain
+build_windows:
+  <<: *build_job_template_default
+  image: $IMGSVR/$WINBUILDIMG:$IMGTAG
+  needs:
+      - job: build_linux
+  parallel:
+    matrix:
+      - citooltype: ["newlibc", "glibc"]
+  script:
+    # copy the template
+    - cp scripts/toolchain/buildenv.sample build.env
+    - BUILDENV=build.env source scripts/toolchain/setup_env.sh
+    - export TOOLVER=${citoolver}
+    - export TOOLTYPE=${citooltype}
+    - export TOOLHOST=win32
+    - ./scripts/toolchain/build.sh
+
+cleanbuild:
+  parallel:
+    matrix:
+      - citooltype: ["newlibc", "glibc"]
+      - citoolhost: ["win32", "linux64"]
+  stage: build
+  when: manual
+  allow_failure: true
+  script:
+    - export citoolver=${CI_COMMIT_REF_SLUG}${CI_MERGE_REQUEST_PROJECT_ID}
+    - export TOOLVER=${citoolver}
+    - export TOOLTYPE=${citooltype}
+    - export TOOLHOST=${citoolhost}
+    - CLEANINSTALL=1 ./scripts/toolchain/cleanup.sh
+  tags:
+    - env::native
+    - host::whss4
+
+## Job for deploy document to internal server
+release:
+  stage: deploy
+  when: on_success
+  interruptible: true
+  only:
+      refs:
+          - branches
+          - tags
+  parallel:
+    matrix:
+      - citooltype: ["newlibc", "glibc"]
+  except:
+    changes:
+      - LICENSE
+      - "*.md"
+  script:
+    - export TOOLVER=${CI_COMMIT_REF_SLUG}
+    - export TOOLTYPE=${citooltype}
+    - ./scripts/toolchain/release.sh
+  tags:
+    - env::native
+    - host::whss4
