@@ -67,7 +67,9 @@ build_linux:
   script:
     # copy the template
     - cp scripts/toolchain/buildenv.sample build.env
-    - scl enable devtoolset-7 rh-python36 bash
+    # source scl environment https://listman.redhat.com/archives/sclorg/2020-October/msg00000.html
+    - source scl_source enable devtoolset-7 rh-python36
+    - which gcc python3
     - BUILDENV=build.env source scripts/toolchain/setup_env.sh
     - export TOOLVER=${citoolver}
     - export TOOLTYPE=${citooltype}
