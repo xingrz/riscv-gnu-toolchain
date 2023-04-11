@@ -43,7 +43,7 @@ fi
 
 if [[ "$CI_PIPELINE_ID" =~ ^[0-9]+$ ]] ; then
     workroot=/Local/gitlab-runner/work
-    if [ -d $workroot ] ; then
+    if [ ! -d $workroot ] ; then
         echo "INFO: Maybe in docker environment now!"
         workroot=/work
     fi
