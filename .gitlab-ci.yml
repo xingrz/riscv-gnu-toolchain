@@ -28,14 +28,17 @@ stages:
       - LICENSE
       - "*.md"
   before_script:
-    - command -v ssh-agent >/dev/null || ( apt-get update -y && apt-get install openssh-client -y )
+    - command -v ssh-agent >/dev/null
     - eval $(ssh-agent -s)
     - mkdir -p ~/.ssh
-    - chmod 700 ~/.
-    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+    - chmod 700 ~/.ssh
+    # ssh-add - doesn't work in centos6. error with No such file or directory
+    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/id_rsa
+    - chmod 600 ~/.ssh/id_rsa
     # important: need to avoid git ssh asking yes/no when clone
     # https://serverfault.com/questions/469052/ssh-failing-from-script-working-on-command-line-git
     - ssh-keyscan gito > ~/.ssh/known_hosts
+    - ssh-keyscan gito.corp.nucleisys.com >> ~/.ssh/known_hosts
     # prepare toolchain source code
     - CLONE_DEPTH=1 ./scripts/toolchain/prepsrc.sh
     # set the toolver to branch name or tag name, see https://docs.gitlab.com/ee/ci/variables/predefined_variables.html
