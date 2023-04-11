@@ -67,6 +67,7 @@ build_linux:
   script:
     # copy the template
     - cp scripts/toolchain/buildenv.sample build.env
+    - scl enable devtoolset-7 rh-python36 bash
     - BUILDENV=build.env source scripts/toolchain/setup_env.sh
     - export TOOLVER=${citoolver}
     - export TOOLTYPE=${citooltype}
