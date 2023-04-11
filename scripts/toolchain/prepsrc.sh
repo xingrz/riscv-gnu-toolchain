@@ -26,7 +26,7 @@ gitosrv=git@gito.corp.nucleisys.com
 toolchain_repo=${TOOLCHAIN_REPO:-${gitosrv}:software/devtools/riscv-gnu-toolchain.git}
 libncrt_repo=${LIBNCRT_REPO:-${gitosrv}:software/emrun/nuclei-emrun.git}
 clone_depth=${CLONE_DEPTH:-}
-
+force_submodule=${FORCE_SUBMODULE:-}
 
 gitopts=""
 if [ "x${clone_depth}" != "x" ] ; then
@@ -60,6 +60,7 @@ function git_clone_repo() {
 
 function git_submodule_update() {
     echo "INFO: Init and update repo $(basename $(pwd)) submodule"
+    git submodule sync --recursive
     git submodule update --init --recursive ${gitopts}
 }
 
@@ -75,7 +76,7 @@ function init_toolchain_repo() {
         echo "WARN: Toolchain source directory is not a git repo, will not update submodule!"
     else
         local gitsubmodulestatus=$(git submodule foreach git status | grep Enter)
-        if [ "x$gitsubmodulestatus" == "x" ] ; then
+        if [ "x$gitsubmodulestatus" == "x" ] || [ "x${force_submodule}" == "x1" ] ; then
             echo "INFO: initialize submodule for riscv toolchain"
             git_submodule_update
         else
