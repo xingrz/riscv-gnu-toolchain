@@ -108,15 +108,17 @@ pushd $toolbuilddir
 
 echo "INFO: Generate build stamp and repo information into $toolprefix"
 describe_repo "$toolsrcdir" "$toolprefix/gitrepo.txt"
-describe_build "$toolprefix/build.txt"
 
 if [ "x$dorebuild" == "x1" ] ; then
     echo "WARN: Rebuild toolchain in $toolbuilddir now, will not do toolchain configure!"
 else
+    describe_build "$toolprefix/build.txt"
     if [ "x$doconf" == "x1" ] ; then
         echo "INFO: Do configure and install to $toolprefix, configure command as below!"
         confcmd="${toolsrcdir}/configure --prefix=${toolprefix} ${confopts}"
         echo "INFO: ${confcmd}"
+        # save configure command to build.txt
+        echo "Configure command: ${confcmd}" >> $toolprefix/build.txt
         $confcmd
     else
         echo "INFO: Will not do toolchain configure!"
