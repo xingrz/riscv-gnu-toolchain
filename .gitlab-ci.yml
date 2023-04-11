@@ -117,6 +117,7 @@ release:
   script:
     - export TOOLVER=${CI_COMMIT_REF_SLUG}
     - export TOOLTYPE=${citooltype}
+    - export TOOLHOST=linux64
     - ./scripts/toolchain/release.sh
   tags:
     - env::native
