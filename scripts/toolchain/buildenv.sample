@@ -3,7 +3,7 @@
 # toolchain type: newlibc or glibc
 TOOLTYPE=newlibc
 # toolchain host: win32 or linux64
-TOOLHOST=linux64
+#TOOLHOST=linux64
 # toolchain version, / or \ isnot allowed, such as 2023.04-devbuild or 2023.04.10
 TOOLVER=2023.04-devbuild
 # arguments passed to --with-multilib-generator
