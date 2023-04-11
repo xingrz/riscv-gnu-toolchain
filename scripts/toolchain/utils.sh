@@ -12,7 +12,8 @@ dorelease=${DORELEASE:-}
 
 # toolchain source directory
 toolsrcdir=$(readlink -f $SCRIPTDIR/../..)
-BUILDDATE=${BUILDDATE:-$(date -u +%Y%m%d_%H%M%S)}
+BUILDDATE=${BUILDDATE:-$(date -u +%Y%m%d)}
+BUILDTIME=${BUILDTIME:-$(date -u +%Y%m%d_%H%M%S)}
 TOOLNAME=gcc
 
 # share toolchain location for nuclei server to access
@@ -62,6 +63,7 @@ else
 fi
 
 LocalInstalls=${LocalInstalls}/${toolhost}/${tooltype}
+LocalLinInstalls=${LocalInstalls}/linux64/${tooltype}
 ShareInstalls=${ShareLoc}/${toolhost}/${tooltype}
 
 savebldenv=$(pwd)/lastbuild_${toolhost}_${tooltype}.env
@@ -83,30 +85,43 @@ if [ "x$dorebuild" == "x1" ] ; then
         exit 1
     fi
 else
-    if [ "x$toolver" != "x" ] ; then
-        toolprefix=$LocalInstalls/${toolver}/$TOOLNAME
-        if [ "x${CI_JOB_ID}" != "x" ] ; then
-            toolbuilddir=$LocalBuilds/${toolver}_job${CI_JOB_ID}
-        else
-            toolbuilddir=$LocalBuilds/${toolver}_$BUILDDATE
-        fi
-    elif [ "x${CI_JOB_ID}" != "x" ] ; then
-        toolprefix=$LocalInstalls/job${CI_JOB_ID}/$TOOLNAME
-        toolbuilddir=$LocalBuilds/job${CI_JOB_ID}
+    if [ "x${CI_JOB_ID}" != "x" ] ; then
+        toolbuildtag=pipeline${CI_PIPELINE_ID}_job${CI_JOB_ID}
     else
-        toolprefix=$LocalInstalls/$BUILDDATE/$TOOLNAME
-        toolbuilddir=$LocalBuilds/$BUILDDATE
+        toolbuildtag=$BUILDTIME
     fi
+    if [ "x$toolver" != "x" ] ; then
+        toolver=$toolver
+    elif [ "x${CI_JOB_ID}" != "x" ] ; then
+        toolver=pipeline${CI_PIPELINE_ID}
+    else
+        toolver=$BUILDDATE
+    fi
+    builddirname=${toolver}_$toolbuildtag
+    toolprefix=$LocalInstalls/${toolver}/$TOOLNAME
+    lintoolprefix=$LocalLinInstalls/${toolver}/${TOOLNAME}
+    toolbuilddir=$LocalBuilds/${builddirname}
     # only save environment when no do release
     if [ "x$dorelease" != "x1" ] ; then
         echo "INFO: Save build prefix and build directory environment variable to $savebldenv"
         echo "toolprefix=${toolprefix}" > $savebldenv
         echo "toolbuilddir=${toolbuilddir}" >> $savebldenv
+        echo "toolver=${toolver}" >> $savebldenv
+        echo "lintoolprefix=${lintoolprefix}" >> $savebldenv
+        echo "builddirname=${builddirname}" >> $savebldenv
+        echo "toolbuildtag=${toolbuildtag}" >> $savebldenv
     fi
 fi
 toolbasedir="${toolprefix}/.."
 
-function describe_repo {
+function prepare_buildenv() {
+    if [ "x$toolhost" == "xwin32" ] ; then
+        echo "INFO: Add prebuilt linux host riscv toolchain $lintoolprefix into PATH"
+        export PATH=$lintoolprefix/bin:$PATH
+    fi
+}
+
+function describe_repo() {
     local repodir=${1}
     local repodesc=${2:-gitrepo.txt}
 
@@ -127,11 +142,26 @@ function describe_repo {
     fi
 }
 
-function describe_build {
+function describe_build() {
     local builddesc=${1:-build.txt}
 
     date --utc +%s > ${builddesc}
     date >> ${builddesc}
+}
+
+function cleanup_build() {
+    local cleaninstall=${1:-}
+    local dir2rm=$LocalBuilds/${toolver}_*
+    echo "INFO: Remove all build related directories for $toolver in $dir2rm"
+    rm -rf $dir2rm
+    local tooldir=$(readlink -f $toolbasedir)
+    if [ "x$tooldir" != "x" ] && [ "x$cleaninstall" == "x1" ] ; then
+        echo "INFO: Remove all installed toolchain for $toolver in $tooldir"
+        rm -rf $tooldir
+    else
+        echo "INFO: Will not remove installed toolchain for $toolver in $tooldir"
+    fi
+    return 0
 }
 
 function gitarchive() {

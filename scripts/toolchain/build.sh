@@ -125,6 +125,9 @@ else
     fi
 fi
 
+# Prepare build environment
+prepare_buildenv
+
 if [ "x$dobuild" == "x1" ] ; then
     echo "INFO: Do toolchain build for target $maketarget in 3s"
     sleep 3
