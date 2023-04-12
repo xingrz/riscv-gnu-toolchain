@@ -43,6 +43,7 @@ prepare_source:
   variables:
     libncrtbranch: feature/rvgcc
   script:
+    - free -g
     - command -v ssh-agent >/dev/null
     - eval $(ssh-agent -s)
     - mkdir -p ~/.ssh
@@ -59,8 +60,8 @@ prepare_source:
     - echo $CI_REPOSITORY_URL
     - git remote set-url origin git@gito.corp.nucleisys.com:software/devtools/riscv-gnu-toolchain.git
     # https://stackoverflow.com/questions/6842687/the-remote-end-hung-up-unexpectedly-while-git-cloning
-    - git config --global http.postBuffer 512M
-    - git config --global http.maxRequestBuffer 512M
+    - git config --global http.postBuffer 256M
+    - git config --global http.maxRequestBuffer 256M
     # sync url using ssh url, clean repo and its submodule
     - git submodule init || true
     - git submodule sync || true
@@ -68,6 +69,8 @@ prepare_source:
     - git clean -fdx
     - git submodule foreach --recursive git clean -xfdf || true
     - git reset --hard || true
+    # enable git trace
+    - export GIT_TRACE=1
     # reset repo and its submodule repo
     #- git reset --hard --recurse-submodules || true
     # prepare toolchain source code
