@@ -1,8 +1,13 @@
 variables:
   SHARELOC: /home/share/devtools
   # https://docs.gitlab.com/ee/ci/runners/configure_runners.html#git-strategy
+  # fetch strategy will met a lot of strange issues when using with submodule such as
+  # fatal: not a git repository: dejagnu/../.git/modules/dejagnu
+  # so just do a fresh clone without update submodule
   GIT_STRATEGY: clone
+  # don't clone submodule
   GIT_SUBMODULE_STRATEGY: none
+  # clone depth set to a small number
   GIT_DEPTH: "3"
   IMGSVR: rego.corp.nucleisys.com/software
   LINBUILDIMG: "gnutoolchain-centos6"
@@ -27,6 +32,9 @@ stages:
 prepare_source:
   stage: prepare
   interruptible: true
+  # https://docs.gitlab.com/ee/ci/yaml/#timeout
+  timeout: 15m
+  retry: 2
   image: $IMGSVR/$LINBUILDIMG:$IMGTAG
   except:
     changes:
