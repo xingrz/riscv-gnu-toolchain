@@ -51,11 +51,12 @@ prepare_source:
     - echo $CI_REPOSITORY_URL
     - git remote set-url origin git@gito.corp.nucleisys.com:software/devtools/riscv-gnu-toolchain.git
     # https://stackoverflow.com/questions/6842687/the-remote-end-hung-up-unexpectedly-while-git-cloning
-    - git config --global http.postBuffer 1024M
-    - git config --global http.maxRequestBuffer 1024M
+    - git config --global http.postBuffer 512M
+    - git config --global http.maxRequestBuffer 512M
     # sync url using ssh url, clean repo and its submodule
     - git submodule init || true
     - git submodule sync || true
+    - git submodule || true
     - git clean -fdx
     - git submodule foreach --recursive git clean -xfdf || true
     - git reset --hard || true
