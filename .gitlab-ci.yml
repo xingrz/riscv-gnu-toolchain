@@ -127,7 +127,7 @@ cleanbuild:
   parallel:
     matrix:
       - citooltype: ["newlibc", "glibc"]
-      - citoolhost: ["win32", "linux64"]
+        citoolhost: ["win32", "linux64"]
   stage: build
   when: manual
   allow_failure: true
