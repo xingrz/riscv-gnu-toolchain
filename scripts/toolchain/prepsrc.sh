@@ -66,7 +66,7 @@ function git_clone_repo() {
 
 function git_submodule_update() {
     echo "INFO: Init and update repo $(basename $(pwd)) submodule"
-    git submodule sync || echo "ERROR: Sync repo url fail"; exit 1
+    git submodule sync
     git submodule update -f --init --recursive ${gitopts} || echo "ERROR: Update submodule fail"; exit 1
 }
 
