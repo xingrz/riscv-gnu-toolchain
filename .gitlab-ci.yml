@@ -50,6 +50,7 @@ prepare_source:
     - git remote set-url origin git@gito.corp.nucleisys.com:software/devtools/riscv-gnu-toolchain.git
     - git config --global http.postBuffer 524288000
     - git clean -fdx
+    - git submodule sync --recursive
     - git submodule foreach --recursive git clean -xfdf || true
     - git reset --hard --recurse-submodules || true
     # prepare toolchain source code
