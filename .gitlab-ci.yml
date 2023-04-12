@@ -56,7 +56,7 @@ prepare_source:
     - git clean -fdx
     - git submodule foreach --recursive git clean -xfdf || true
     # reset repo and its submodule repo
-    - git reset --hard --recurse-submodules || true
+    #- git reset --hard --recurse-submodules || true
     # prepare toolchain source code
     - FORCE_SUBMODULE=1 CLONE_DEPTH=1 ./scripts/toolchain/prepsrc.sh ${libncrtbranch}
   artifacts:
