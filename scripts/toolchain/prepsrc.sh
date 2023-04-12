@@ -26,6 +26,7 @@ gitosrv=git@gito.corp.nucleisys.com
 toolchain_repo=${TOOLCHAIN_REPO:-${gitosrv}:software/devtools/riscv-gnu-toolchain.git}
 libncrt_repo=${LIBNCRT_REPO:-${gitosrv}:software/emrun/nuclei-emrun.git}
 clone_depth=${CLONE_DEPTH:-}
+fetch_jobs=${FETCH_JOBS:-4}
 force_submodule=${FORCE_SUBMODULE:-}
 
 gitopts=""
@@ -34,6 +35,11 @@ if [ "x${clone_depth}" != "x" ] ; then
     gitopts="$gitopts --depth ${clone_depth}"
 else
     echo "INFO: Clone depth is not set!"
+fi
+
+if [ "x${fetch_jobs}" != "x" ] ; then
+    echo "INFO: fetch jobs set to ${fetch_jobs}"
+    gitopts="$gitopts --jobs ${fetch_jobs}"
 fi
 
 function show_repo_status() {
