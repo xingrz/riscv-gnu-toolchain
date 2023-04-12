@@ -1,7 +1,7 @@
 variables:
   SHARELOC: /home/share/devtools
   # https://docs.gitlab.com/ee/ci/runners/configure_runners.html#git-strategy
-  GIT_STRATEGY: fetch
+  GIT_STRATEGY: clone
   GIT_SUBMODULE_STRATEGY: none
   GIT_DEPTH: "3"
   IMGSVR: rego.corp.nucleisys.com/software
