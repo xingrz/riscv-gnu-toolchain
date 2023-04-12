@@ -67,7 +67,7 @@ function git_clone_repo() {
 function git_submodule_update() {
     echo "INFO: Init and update repo $(basename $(pwd)) submodule"
     git submodule sync --recursive
-    git submodule update --init --recursive ${gitopts}
+    git submodule update -f --init --recursive ${gitopts}
 }
 
 function init_toolchain_repo() {
