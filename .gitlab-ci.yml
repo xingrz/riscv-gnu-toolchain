@@ -51,11 +51,12 @@ prepare_source:
     - git config --global http.postBuffer 524288000
     - git clean -fdx
     - git submodule foreach --recursive git clean -xfdf || true
+    - git reset --hard --recurse-submodules || true
     # prepare toolchain source code
     - FORCE_SUBMODULE=1 CLONE_DEPTH=1 ./scripts/toolchain/prepsrc.sh
   artifacts:
     paths:
-      - /
+      - ./*
   tags:
     - env::docker
     - build::toolchain
