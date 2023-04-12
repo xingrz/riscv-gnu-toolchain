@@ -1,7 +1,8 @@
 variables:
   SHARELOC: /home/share/devtools
+  # https://docs.gitlab.com/ee/ci/runners/configure_runners.html#git-strategy
+  GIT_STRATEGY: fetch
   GIT_SUBMODULE_STRATEGY: none
-  GIT_STRATEGY: clone
   GIT_DEPTH: "3"
   IMGSVR: rego.corp.nucleisys.com/software
   LINBUILDIMG: "gnutoolchain-centos6"
@@ -18,19 +19,20 @@ workflow:
     - if: $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /nuclei|feature/ && $CI_PIPELINE_SOURCE == "merge_request_event"
 
 stages:
+  - prepare
   - build
   - test
   - deploy
 
-## Job template
-.build_job_template: &build_job_template_default
-  stage: build
+prepare_source:
+  stage: prepare
   interruptible: true
+  image: $IMGSVR/$LINBUILDIMG:$IMGTAG
   except:
     changes:
       - LICENSE
       - "*.md"
-  before_script:
+  script:
     - command -v ssh-agent >/dev/null
     - eval $(ssh-agent -s)
     - mkdir -p ~/.ssh
@@ -42,13 +44,36 @@ stages:
     # https://serverfault.com/questions/469052/ssh-failing-from-script-working-on-command-line-git
     - ssh-keyscan gito > ~/.ssh/known_hosts
     - ssh-keyscan gito.corp.nucleisys.com >> ~/.ssh/known_hosts
+    - pwd
     - git remote -v
     - echo $CI_REPOSITORY_URL
     - git remote set-url origin git@gito.corp.nucleisys.com:software/devtools/riscv-gnu-toolchain.git
     - git config --global http.postBuffer 524288000
     - git clean -fdx
+    - git submodule foreach --recursive git clean -xfdf || true
     # prepare toolchain source code
     - FORCE_SUBMODULE=1 CLONE_DEPTH=1 ./scripts/toolchain/prepsrc.sh
+  artifacts:
+    paths:
+      - /
+  tags:
+    - env::docker
+    - build::toolchain
+    - host::whss4
+
+## Job template
+.build_job_template: &build_job_template_default
+  stage: build
+  interruptible: true
+  dependencies:
+    - prepare_source
+  variables:
+    GIT_STRATEGY: none
+  except:
+    changes:
+      - LICENSE
+      - "*.md"
+  before_script:
     # set the toolver to branch name or tag name, see https://docs.gitlab.com/ee/ci/variables/predefined_variables.html
     - export citoolver=${CI_COMMIT_REF_SLUG}${CI_MERGE_REQUEST_PROJECT_ID}
     - echo "Build for toolchain version $citoolver, toolchain type $citooltype"
@@ -80,8 +105,11 @@ build_linux:
 build_windows:
   <<: *build_job_template_default
   image: $IMGSVR/$WINBUILDIMG:$IMGTAG
+  when: manual
   needs:
       - job: build_linux
+        artifacts: false
+      - job: prepare_source
   parallel:
     matrix:
       - citooltype: ["newlibc", "glibc"]
