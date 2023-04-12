@@ -68,7 +68,6 @@ function git_submodule_update() {
     echo "INFO: Init and update repo $(basename $(pwd)) submodule"
     git submodule sync
     git submodule update -f --init --recursive ${gitopts}
-    git submodule || echo "ERROR: Update submodule fail"; exit 1
 }
 
 function init_toolchain_repo() {
