@@ -93,6 +93,8 @@ if [[ ! "$confopts" =~ "--with-multilib-generator" ]] ; then
     elif [ "x$domultilib" == "x1" ] ; then
         echo "INFO: Enable multilib build with default multilib configuration"
         confopts="$confopts --enable-multilib"
+    else
+        echo "INFO: Disable multilib build"
     fi
 else
     echo "INFO: multilib-generator configuration present in passed configure options!"
