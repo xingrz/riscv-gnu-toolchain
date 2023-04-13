@@ -113,13 +113,17 @@ prepare_source:
   before_script:
     # check toolchain repo status
     - |
+        echo "INFO: Show current repo status"
         git status || true
         git submodule || true
         git submodule foreach git status || true
         # force reset repo and its submodule source code
+        echo "INFO: Hard reset repo and its submodule source code"
         git reset --hard || true
         git submodule foreach git reset --hard || true
-        git submodule foreach git status || true
+        echo "INFO: Show repo status after reset"
+        git status || true
+        git submodule || true
         echo "INFO: toolchain repo is ready!"
     # check libncrt repo status
     - |
