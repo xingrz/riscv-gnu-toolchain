@@ -95,8 +95,9 @@ prepare_source:
     when:
       # ERROR: Job failed (system failure): Cannot connect to the Docker daemon at unix:///var/run/docker.sock. Is the docker daemon running? (docker.go:534:120s)
       - runner_system_failure
-  dependencies:
-    - prepare_source
+  needs:
+    - job: prepare_source
+      artifacts: true
   variables:
     GIT_STRATEGY: none
   except:
@@ -104,7 +105,8 @@ prepare_source:
       - LICENSE
       - "*.md"
   artifacts:
-    name: "${CI_JOB_NAME}-${citooltype}_${CI_COMMIT_SHA::8}.log"
+    name: "${CI_JOB_NAME}-${citooltype}_${CI_COMMIT_SHA::8}"
+    when: always
     paths:
       - "*.log"
       - "*.env"
@@ -156,6 +158,7 @@ build_linux:
     - export TOOLVER=${citoolver}
     - export TOOLTYPE=${citooltype}
     - export TOOLHOST=linux64
+    - ./scripts/toolchain/save_env.sh build.env
     - ./scripts/toolchain/build.sh 2>&1 | tee build.log
     - buildsts=${PIPESTATUS[0]}
     - exit $buildsts
@@ -166,9 +169,10 @@ build_windows:
   image: $IMGSVR/$WINBUILDIMG:$IMGTAG
   when: manual
   needs:
-      - job: build_linux
-        artifacts: false
-      - job: prepare_source
+    - job: build_linux
+      artifacts: false
+    - job: prepare_source
+      artifacts: true
   parallel:
     matrix:
       - citooltype: ["newlibc", "glibc"]
@@ -179,13 +183,19 @@ build_windows:
     - export TOOLVER=${citoolver}
     - export TOOLTYPE=${citooltype}
     - export TOOLHOST=win32
-    - ./scripts/toolchain/build.sh
+    - ./scripts/toolchain/save_env.sh build.env
     - ./scripts/toolchain/build.sh 2>&1 | tee build.log
     - buildsts=${PIPESTATUS[0]}
     - exit $buildsts
 
 # clean up build directories and build installed toolchains
 cleanbuild:
+  # don't need full toolchain source code
+  # still need to run in docker to clean builds, need root permission in docker
+  image: $IMGSVR/ubuntu:20.04
+  needs:
+    - job: prepare_source
+      artifacts: false
   parallel:
     matrix:
       - citooltype: ["newlibc", "glibc"]
@@ -200,12 +210,19 @@ cleanbuild:
     - export TOOLHOST=${citoolhost}
     - CLEANINSTALL=1 ./scripts/toolchain/cleanup.sh
   tags:
-    - env::shell
+    - env::docker
     - host::whss4
 
 ## Job for deploy document to internal server
 release:
   stage: deploy
+  # https://docs.gitlab.com/ee/ci/yaml/index.html#needsartifacts
+  # don't need full toolchain source code
+  needs:
+    - job: prepare_source
+      artifacts: false
+    - job: build_linux
+      artifacts: false
   when: on_success
   interruptible: true
   only:
