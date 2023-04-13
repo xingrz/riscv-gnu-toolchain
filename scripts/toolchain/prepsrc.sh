@@ -28,6 +28,7 @@ libncrt_repo=${LIBNCRT_REPO:-${gitosrv}:software/emrun/nuclei-emrun.git}
 clone_depth=${CLONE_DEPTH:-}
 fetch_jobs=${FETCH_JOBS:-4}
 force_submodule=${FORCE_SUBMODULE:-}
+force_recursive=${FORCE_RECURSIVE:-}
 
 gitopts=""
 if [ "x${clone_depth}" != "x" ] ; then
@@ -65,9 +66,15 @@ function git_clone_repo() {
 }
 
 function git_submodule_update() {
+    local otheropts=$@
     echo "INFO: Init and update repo $(basename $(pwd)) submodule"
-    git submodule sync
-    git submodule update -f --init --recursive ${gitopts}
+    local rcsopts=""
+    if [ "x${force_recursive}" == "x1" ] ; then
+        echo "INFO: force do recursive submodule"
+        rcsopts="--recursive"
+    fi
+    git submodule sync $rcsopts
+    git submodule update -f --init ${rcsopts} ${otheropts} ${gitopts}
 }
 
 function init_toolchain_repo() {
@@ -84,6 +91,7 @@ function init_toolchain_repo() {
         local gitsubmodulestatus=$(git submodule foreach git status | grep Enter)
         if [ "x$gitsubmodulestatus" == "x" ] || [ "x${force_submodule}" == "x1" ] ; then
             echo "INFO: initialize submodule for riscv toolchain"
+            # don't do recursive update submodule, especially for qemu
             git_submodule_update
         else
             echo "NOTICE: submodule repo is already initialized, will not update it!"
