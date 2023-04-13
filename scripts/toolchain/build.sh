@@ -105,6 +105,9 @@ if [[ ! "$confopts" =~ "--with-arch=" ]] && [[ "x$defrvcfg" =~ "--with-arch=" ]]
     confopts="$confopts $defrvcfg"
 fi
 
+# Save build environment variables
+${SCRIPTDIR}/save_env.sh savebuild_${toolhost}_${tooltype}.env
+
 echo "INFO: Change directory to build folder $toolbuilddir"
 pushd $toolbuilddir
 

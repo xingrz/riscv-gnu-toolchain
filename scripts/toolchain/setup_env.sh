@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 
-unset TOOLTYPE TOOLHOST TOOLVER MULTILIBGEN DOMULTILIB DOCONF
-unset DOSTRIP DOLLVM DOBUILD DOARCHIVE DOLIBNCRT LIBNCRTBLDCFG
-unset DODOC DOCLEAN DEFRVCFG JOBS DOREBUILD
+for enval in TOOLTYPE TOOLHOST TOOLVER MULTILIBGEN DOMULTILIB \
+    DOCONF DOSTRIP DOLLVM DOBUILD DOARCHIVE DOLIBNCRT \
+    LIBNCRTBLDCFG DODOC DOCLEAN DEFRVCFG JOBS DOREBUILD ; do
+    unset $enval
+done
 
 # how to use
 # the below command will setup build environment variables defined in /path/to/your_build.env
@@ -14,7 +16,6 @@ unset DODOC DOCLEAN DEFRVCFG JOBS DOREBUILD
 # environment variables
 # BUILDENV: build environment variable file
 buildenv=${BUILDENV:-build.env}
-
 
 echo "INFO: Unset all the build related environment variables"
 
