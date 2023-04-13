@@ -109,10 +109,28 @@ prepare_source:
       - "*.log"
       - "*.env"
   before_script:
-    # check repo status
-    - git status || true
-    - git submodule || true
-    - git submodule foreach git status || true
+    # check toolchain repo status
+    - |
+        git status || true
+        git submodule || true
+        git submodule foreach git status || true
+        # force reset repo and its submodule source code
+        git reset --hard || true
+        git submodule foreach git reset --hard || true
+        git submodule foreach git status || true
+        echo "INFO: toolchain repo is ready!"
+    # check libncrt repo status
+    - |
+        if [ ! -d libncrt ] ; then
+            echo "ERROR: libncrt repo doesn't exist, exit now!"
+            exit 1
+        fi
+        pushd libncrt
+        git reset --hard || true
+        git submodule foreach git reset --hard || true
+        git submodule || true
+        popd
+        echo "INFO: libncrt repo is ready!"
     # set the toolver to branch name or tag name, see https://docs.gitlab.com/ee/ci/variables/predefined_variables.html
     - export citoolver=${CI_COMMIT_REF_SLUG}${CI_MERGE_REQUEST_PROJECT_ID}
     - echo "Build for toolchain version $citoolver, toolchain type $citooltype"
