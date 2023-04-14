@@ -13,3 +13,4 @@ libncrt*
 /install-newlib-nano/
 /stamps/
 /Local*/
+*.log
