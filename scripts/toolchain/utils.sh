@@ -64,7 +64,7 @@ else
     fi
 fi
 
-LocalInstalls=${LocalInstalls}/${toolhost}/${tooltype}
+LocalHostInstalls=${LocalInstalls}/${toolhost}/${tooltype}
 LocalLinInstalls=${LocalInstalls}/linux64/${tooltype}
 ShareInstalls=${ShareLoc}/${toolhost}/${tooltype}
 
@@ -101,7 +101,7 @@ else
         toolver=$builddate
     fi
     builddirname=${toolver}_${tooltag}_${toolbuildtag}
-    toolprefix=$LocalInstalls/${toolver}/$TOOLNAME
+    toolprefix=$LocalHostInstalls/${toolver}/$TOOLNAME
     lintoolprefix=$LocalLinInstalls/${toolver}/${TOOLNAME}
     toolbuilddir=$LocalBuilds/${builddirname}
     # only save environment when no do release
