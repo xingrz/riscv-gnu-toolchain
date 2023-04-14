@@ -15,4 +15,4 @@ fi
 
 sleep 3
 cleanup_build $cleaninstall
-exit 1
+exit 0

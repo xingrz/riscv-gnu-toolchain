@@ -12,8 +12,10 @@ dorelease=${DORELEASE:-}
 
 # toolchain source directory
 toolsrcdir=$(readlink -f $SCRIPTDIR/../..)
-BUILDDATE=${BUILDDATE:-$(date -u +%Y%m%d)}
-BUILDTIME=${BUILDTIME:-$(date -u +%Y%m%d_%H%M%S)}
+# BUILDDATE is used to set toolver when TOOLVER is not specified
+builddate=${BUILDDATE:-$(date -u +%Y%m%d)}
+# If you want to fix the build directory name, you can set BUILDTAG variable
+buildtag=${BUILDTAG:-$(date -u +%Y%m%d_%H%M%S)}
 TOOLNAME=gcc
 
 # share toolchain location for nuclei server to access
@@ -66,7 +68,8 @@ LocalInstalls=${LocalInstalls}/${toolhost}/${tooltype}
 LocalLinInstalls=${LocalInstalls}/linux64/${tooltype}
 ShareInstalls=${ShareLoc}/${toolhost}/${tooltype}
 
-savebldenv=$(pwd)/lastbuild_${toolhost}_${tooltype}.env
+tooltag=${toolhost}_${tooltype}
+savebldenv=$(pwd)/lastbuild_${tooltag}.env
 if [ "x$dorebuild" == "x1" ] ; then
     if [ ! -f $savebldenv ] ; then
         echo "ERROR: Could not find last build save variable file $savebldenv, please check!"
@@ -88,16 +91,16 @@ else
     if [ "x${CI_JOB_ID}" != "x" ] ; then
         toolbuildtag=pipeline${CI_PIPELINE_ID}_job${CI_JOB_ID}
     else
-        toolbuildtag=$BUILDTIME
+        toolbuildtag=$buildtag
     fi
     if [ "x$toolver" != "x" ] ; then
         toolver=$toolver
     elif [ "x${CI_JOB_ID}" != "x" ] ; then
         toolver=pipeline${CI_PIPELINE_ID}
     else
-        toolver=$BUILDDATE
+        toolver=$builddate
     fi
-    builddirname=${toolver}_$toolbuildtag
+    builddirname=${toolver}_${tooltag}_${toolbuildtag}
     toolprefix=$LocalInstalls/${toolver}/$TOOLNAME
     lintoolprefix=$LocalLinInstalls/${toolver}/${TOOLNAME}
     toolbuilddir=$LocalBuilds/${builddirname}
@@ -151,8 +154,8 @@ function describe_build() {
 
 function cleanup_build() {
     local cleaninstall=${1:-}
-    local dir2rm=$LocalBuilds/${toolver}_*
-    echo "INFO: Remove all build related directories for $toolver in $dir2rm"
+    local dir2rm=$LocalBuilds/${toolver}_${tooltag}_*
+    echo "INFO: Remove all build related directories for $toolver, ${toolhost}, ${tooltype} in $dir2rm"
     rm -rf $dir2rm
     local tooldir=$(readlink -f $toolbasedir)
     if [ "x$tooldir" != "x" ] && [ "x$cleaninstall" == "x1" ] ; then
@@ -263,6 +266,13 @@ function archive_toolchain() {
     else
         tar_toolchain $tooldir $toolname
     fi
+}
+
+function show_toolchain() {
+    local basedir=$(readlink -f ${toolbasedir})
+
+    echo "INFO: Show installed toolchain content."
+    ls -lh ${basedir}
 }
 
 function sync_toolchain() {
