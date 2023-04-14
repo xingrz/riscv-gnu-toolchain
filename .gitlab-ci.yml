@@ -76,6 +76,17 @@ prepare_source:
     #- git reset --hard --recurse-submodules || true
     # prepare toolchain source code
     - FORCE_SUBMODULE=1 CLONE_DEPTH=1 ./scripts/toolchain/prepsrc.sh ${libncrtbranch}
+    # Download gcc prerequisites
+    - |
+        cd gcc
+        downscript=contrib/download_prerequisites
+        if [ ! -f $downscript ] ; then
+            echo "ERROR: gcc repo maybe not complete!"
+            exit 1
+        fi
+        echo "INFO: Download gcc prerequisites..."
+        ./$downscript
+        cd ..
   artifacts:
     name: "rvtoolchain_source-${CI_COMMIT_SHA::8}"
     paths:
