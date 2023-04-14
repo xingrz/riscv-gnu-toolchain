@@ -971,7 +971,10 @@ stamps/build-llvm-linux: $(LLVM_SRCDIR) $(LLVM_SRC_GIT) \
 	# Without a proper GCC install directory libgcc won't be found.
 	# As a workaround we have to merge both paths:
 	mkdir -p $(SYSROOT)/lib/
-	ln -s $(INSTALL_DIR)/lib/gcc $(SYSROOT)/lib/gcc
+	# remove $(SYSROOT)/lib/gcc symbolic link first
+	rm -f $(SYSROOT)/lib/gcc
+	# symbolic link use relative path
+	ln -s ../../lib/gcc -t $(SYSROOT)/lib
 	rm -rf $@ $(notdir $@)
 	mkdir $(notdir $@)
 	cd $(notdir $@) && \
