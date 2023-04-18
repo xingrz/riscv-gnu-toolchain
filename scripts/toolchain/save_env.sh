@@ -10,7 +10,7 @@ for enval in TOOLTYPE TOOLHOST TOOLVER MULTILIBGEN DOMULTILIB \
     DOCONF DOSTRIP DOLLVM DOBUILD DOARCHIVE DOLIBNCRT \
     LIBNCRTBLDCFG DODOC DOCLEAN DEFRVCFG JOBS DOREBUILD ; do
     # save environment variable
-    echo "$enval=`printenv $enval`" >> $saveenv
+    echo "$enval=\"`printenv $enval`"\" >> $saveenv
 done
 
 exit 0
