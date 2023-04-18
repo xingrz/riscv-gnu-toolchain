@@ -1,5 +1,5 @@
 variables:
-  SHARELOC: /home/share/devtools
+  SHARELOC: /home/share/devtools/toolchain/nuclei_gnu
   # https://docs.gitlab.com/ee/ci/runners/configure_runners.html#git-strategy
   # fetch strategy will met a lot of strange issues when using with submodule such as
   # fatal: not a git repository: dejagnu/../.git/modules/dejagnu
