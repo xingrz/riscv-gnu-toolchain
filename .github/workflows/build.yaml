@@ -51,6 +51,7 @@ jobs:
         run: git submodule update --init --recursive --progress --recommend-shallow
 
       - name: Save submodules cache
+        if: steps.cache-restore.outputs.cache-hit != 'true'
         uses: actions/cache/save@v3
         with:
           path: ${{ github.workspace }}/gcc/.git/modules
