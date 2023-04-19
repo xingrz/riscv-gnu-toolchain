@@ -69,14 +69,14 @@ jobs:
         working-directory: ${{ github.workspace }}/gcc
         run: |
           TARGET_TUPLE=($(echo ${{ matrix.target }} | tr "-" "\n"))
-          ./configure --prefix=/opt/riscv --with-arch=${TARGET_TUPLE[0]} --with-abi=${TARGET_TUPLE[1]}
+          ./configure --prefix=/opt/riscv32-unknown-elf --with-arch=${TARGET_TUPLE[0]} --with-abi=${TARGET_TUPLE[1]}
           sudo make -j $(nproc) ${{ matrix.mode }}
 
       - name: Tarball build
-        run: tar czvf riscv.tar.gz -C /opt/ riscv/
+        run: tar czvf riscv32-unknown-elf.tar.gz -C /opt/ riscv32-unknown-elf/
 
       - name: Upload artifact
         uses: actions/upload-artifact@v2
         with:
-          name: riscv32-elf-${{ matrix.os }}-nightly
-          path: riscv.tar.gz
+          name: riscv32-unknown-elf-${{ matrix.os }}
+          path: riscv32-unknown-elf.tar.gz
