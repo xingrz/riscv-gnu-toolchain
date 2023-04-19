@@ -78,6 +78,12 @@ jobs:
             ${{ github.workspace }}/gcc/pk
           key: ${{ steps.cache-restore.outputs.cache-primary-key }}
 
+      - name: Apply GCC patches
+        working-directory: ${{ github.workspace }}/gcc
+        run: |
+          git -C gcc am ../patches/89411.patch --exclude=gcc/ChangeLog --exclude gcc/testsuite/ChangeLog
+          git -C gcc am ../patches/86724.patch --exclude=gcc/ChangeLog
+
       - name: Build toolchain
         working-directory: ${{ github.workspace }}/gcc
         run: |
