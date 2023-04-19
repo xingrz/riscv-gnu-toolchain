@@ -8,11 +8,12 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os:     [ubuntu-22.04]
+        os:     [ubuntu-latest, macos-latest]
         mode:   [newlib]
         target: [rv32imc-ilp32]
     steps:
-      - name: Install dependencies
+      - name: Install dependencies (Ubuntu)
+        if: startsWith(matrix.os, 'ubuntu')
         run: |
           sudo dpkg --add-architecture i386
           sudo apt update
@@ -20,16 +21,65 @@ jobs:
               autoconf automake autotools-dev curl python3 libmpc-dev libmpfr-dev \
               libgmp-dev gawk build-essential bison flex texinfo gperf libtool \
               patchutils bc zlib1g-dev libexpat-dev git
+          mkdir gcc
+
+      - name: Install dependencies (macOS)
+        if: startsWith(matrix.os, 'macos')
+        run: |
+          brew install python3 gawk gnu-sed coreutils gmp mpfr libmpc isl zlib expat texinfo flock
+          echo "/usr/local/opt/gawk/libexec/gnubin" >> $GITHUB_PATH
+          echo "/usr/local/opt/gnu-sed/libexec/gnubin" >> $GITHUB_PATH
+          echo "/usr/local/opt/coreutils/libexec/gnubin" >> $GITHUB_PATH
+          hdiutil create -size 10g -fs 'Case-sensitive APFS' -volname gcc gcc.dmg
+          hdiutil mount gcc.dmg
+          ln -s /Volumes/gcc $GITHUB_WORKSPACE/gcc
 
       - name: Checkout
         uses: actions/checkout@v3
+        with:
+          path: ${{ github.workspace }}/gcc
+
+      - name: Restore submodules cache
+        id: cache-restore
+        uses: actions/cache/restore@v3
+        with:
+          path: |
+            ${{ github.workspace }}/gcc/binutils
+            ${{ github.workspace }}/gcc/gcc
+            ${{ github.workspace }}/gcc/glibc
+            ${{ github.workspace }}/gcc/dejagnu
+            ${{ github.workspace }}/gcc/newlib
+            ${{ github.workspace }}/gcc/gdb
+            ${{ github.workspace }}/gcc/qemu
+            ${{ github.workspace }}/gcc/musl
+            ${{ github.workspace }}/gcc/spike
+            ${{ github.workspace }}/gcc/pk
+          key: gitmodules-${{ hashFiles('gcc/.gitmodules') }}
 
       - name: Initialize submodules
+        working-directory: ${{ github.workspace }}/gcc
         run: |
           git submodule init
           git submodule update --recursive --progress --recommend-shallow
 
+      - name: Save submodules cache
+        uses: actions/cache/save@v3
+        with:
+          path: |
+            ${{ github.workspace }}/gcc/binutils
+            ${{ github.workspace }}/gcc/gcc
+            ${{ github.workspace }}/gcc/glibc
+            ${{ github.workspace }}/gcc/dejagnu
+            ${{ github.workspace }}/gcc/newlib
+            ${{ github.workspace }}/gcc/gdb
+            ${{ github.workspace }}/gcc/qemu
+            ${{ github.workspace }}/gcc/musl
+            ${{ github.workspace }}/gcc/spike
+            ${{ github.workspace }}/gcc/pk
+          key: ${{ steps.cache-restore.outputs.cache-primary-key }}
+
       - name: Build toolchain
+        working-directory: ${{ github.workspace }}/gcc
         run: |
           TARGET_TUPLE=($(echo ${{ matrix.target }} | tr "-" "\n"))
           ./configure --prefix=/opt/riscv --with-arch=${TARGET_TUPLE[0]} --with-abi=${TARGET_TUPLE[1]}
