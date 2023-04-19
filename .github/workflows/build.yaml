@@ -2,23 +2,15 @@ name: Build
 
 on:
   push:
-    branches:
-      - master
-  pull_request:
-    branches:
-      - master
 
 jobs:
   build:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os:     [ubuntu-20.04, ubuntu-22.04]
-        mode:   [newlib, linux, musl]
-        target: [rv32gc-ilp32d, rv64gc-lp64d]
-        exclude:
-          - mode: musl
-            target: rv32gc-ilp32d
+        os:     [ubuntu-22.04]
+        mode:   [newlib]
+        target: [rv32imc-ilp32]
     steps:
       - uses: actions/checkout@v2
 
@@ -42,15 +34,8 @@ jobs:
       - name: generate prebuilt toolchain name
         id:   toolchain-name-generator
         run: |
-          if [[ "${{ matrix.target }}" == *"32"* ]]; then BITS=32; else BITS=64; fi
-          case "${{ matrix.mode }}" in
-            "linux")
-              MODE="glibc";;
-            "musl")
-              MODE="musl";;
-            *)
-              MODE="elf";;
-          esac
+          BITS=32
+          MODE="elf"
           echo ::set-output name=TOOLCHAIN_NAME::riscv$BITS-$MODE-${{ matrix.os }}-nightly
 
       - uses: actions/upload-artifact@v2
