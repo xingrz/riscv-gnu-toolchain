@@ -1,11 +1,11 @@
 [submodule "binutils"]
 	path = binutils
-	url = https://sourceware.org/git/binutils-gdb.git
-	branch = binutils-2_40-branch
+	url = https://github.com/riscv/riscv-binutils-gdb.git
+	branch = riscv-binutils-2.31.1
 [submodule "gcc"]
 	path = gcc
-	url = https://gcc.gnu.org/git/gcc.git
-	branch = releases/gcc-12
+	url = https://github.com/riscv/riscv-gcc.git
+	branch = riscv-gcc-7.3.0
 [submodule "glibc"]
 	path = glibc
 	url = https://sourceware.org/git/glibc.git
@@ -15,8 +15,8 @@
 	branch = dejagnu-1.6.3
 [submodule "newlib"]
 	path = newlib
-	url = https://sourceware.org/git/newlib-cygwin.git
-	branch = master
+	url = https://github.com/riscv/riscv-newlib.git
+	branch = riscv-newlib-3.0.0
 [submodule "gdb"]
 	path = gdb
 	url = https://sourceware.org/git/binutils-gdb.git
