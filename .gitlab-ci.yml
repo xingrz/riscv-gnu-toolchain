@@ -42,7 +42,8 @@ prepare_source:
       - LICENSE
       - "*.md"
   variables:
-    libncrtbranch: feature/rvgcc
+    # develop branch is used to track latest working version
+    libncrtbranch: develop
   script:
     - free -g
     - command -v ssh-agent >/dev/null
