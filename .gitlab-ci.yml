@@ -37,10 +37,6 @@ prepare_source:
   timeout: 25m
   retry: 2
   image: $IMGSVR/$LINBUILDIMG:$IMGTAG
-  except:
-    changes:
-      - LICENSE
-      - "*.md"
   variables:
     # develop branch is used to track latest working version
     libncrtbranch: develop
