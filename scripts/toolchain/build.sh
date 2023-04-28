@@ -8,6 +8,7 @@ SCRIPTDIR=$(readlink -f $SCRIPTDIR)
 # TOOLHOST: win32 or linux64, guess by docker os type(centos or ubuntu)
 # TOOLVER: default will be build date timestamp, such as 20230406_104544
 # MULTILIBGEN: multilib gen configuration
+# DOLIBDEBUG: enable debug information when build library such as newlibc/glibc, default no
 # DOMULTILIB: enable multilib build, default yes
 # DOSTRIP: strip binary or not, default yes
 # DOCONF: configure toolchain or not, default yes
@@ -24,6 +25,7 @@ tooltype=${TOOLTYPE:-newlibc}
 toolhost=${TOOLHOST:-}
 toolver=${TOOLVER:-}
 multilibgen=${MULTILIBGEN:-}
+dolibdebug=${DOLIBDEBUG:-}
 domultilib=${DOMULTILIB:-}
 doconf=${DOCONF:-1}
 dorebuild=${DOREBUILD:-}
@@ -84,6 +86,11 @@ fi
 if [ "x$dodoc" == "x1" ] ; then
     echo "INFO: Enable toolchain doc build"
     confopts="--enable-doc $confopts"
+fi
+
+if [ "x$dolibdebug" == "x1" ] ; then
+    echo "INFO: Enable build library such as newlibc/glibc with debug information"
+    confopts="--enable-debug-info $confopts"
 fi
 
 if [[ ! "$confopts" =~ "--with-multilib-generator" ]] ; then
