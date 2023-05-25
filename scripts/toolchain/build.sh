@@ -16,6 +16,8 @@ SCRIPTDIR=$(readlink -f $SCRIPTDIR)
 # DOREBUILD: rebuild toolchain using last build environment, will not configure toolchain, default no
 # DOLLVM: build llvm or not, default yes
 # DODOC: build toolchain doc, default no
+# DOCLEAN: clean toolchain build directory after sucessfully built, default no
+# DOCLEANPREFIX: clean toolchain install prefix directory if existed, default no
 # DOLIBNCRT: build libncrt for newlibc toolchain, default yes
 # LIBNCRTBLDCFG: libncrt build config, default riscv64-unknown-elf
 # DOARCHIVE: archive built toolchain and its source code, default no
@@ -37,6 +39,7 @@ dolibncrt=${DOLIBNCRT:-1}
 libncrtbldcfg=${LIBNCRTBLDCFG:-riscv64-unknown-elf}
 dodoc=${DODOC:-0}
 doclean=${DOCLEAN:-}
+docleanprefix=${DOCLEANPREFIX:-}
 defrvcfg=${DEFRVCFG:-"--with-arch=rv64imc --with-abi=lp64"}
 jobs=${JOBS:-16}
 
@@ -66,6 +69,14 @@ sleep 3
 if [ ! -d $toolbuilddir ] ; then
     echo "WARN: Create local build folder $toolbuilddir for toolchain build"
     mkdir -p $toolbuilddir
+fi
+
+# Clean install prefix folder if required
+if [ "x$docleanprefix" == "x1" ] ; then
+    if [ -d $toolprefix ] ; then
+        echo "INFO: Remove existing install folder for toolchain"
+        rm -rf $toolprefix
+    fi
 fi
 
 if [ ! -d $toolprefix ] ; then
