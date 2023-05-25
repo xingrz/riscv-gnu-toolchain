@@ -173,6 +173,8 @@ build_linux:
     - export TOOLVER=${citoolver}
     - export TOOLTYPE=${citooltype}
     - export TOOLHOST=linux64
+    # clean existing toolchain install prefix directory
+    - export DOCLEANPREFIX=1
     - ./scripts/toolchain/save_env.sh build.env
     - ./scripts/toolchain/build.sh 2>&1 | tee build.log
     - buildsts=${PIPESTATUS[0]}
@@ -198,6 +200,8 @@ build_windows:
     - export TOOLVER=${citoolver}
     - export TOOLTYPE=${citooltype}
     - export TOOLHOST=win32
+    # clean existing toolchain install prefix directory
+    - export DOCLEANPREFIX=1
     - ./scripts/toolchain/save_env.sh build.env
     - ./scripts/toolchain/build.sh 2>&1 | tee build.log
     - buildsts=${PIPESTATUS[0]}
