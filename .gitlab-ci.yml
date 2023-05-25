@@ -122,13 +122,16 @@ prepare_source:
     # check toolchain repo status
     - |
         echo "INFO: Show current repo status"
-        git status || true
+        git status --ignored=matching || true
         git submodule || true
-        git submodule foreach git status || true
+        # show also untracked files
+        git submodule foreach git status --ignored=matching || true
         # force reset repo and its submodule source code
         echo "INFO: Hard reset repo and its submodule source code"
         git reset --hard || true
         git submodule foreach git reset --hard || true
+        # remove glibc/newlibc untracked files
+        for cddir in newlib glibc; do git -C $cddir clean -fdx ; done || true
         echo "INFO: Show repo status after reset"
         git status || true
         git submodule || true
