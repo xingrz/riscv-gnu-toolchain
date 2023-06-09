@@ -167,6 +167,15 @@ function cleanup_build() {
     return 0
 }
 
+function md5sum_folder() {
+    local fld2md=${1:-.}
+
+    if [ -d $fld2md ] ; then
+        echo "Do md5sum on files existing in $fld2md directory"
+        find $fld2md -maxdepth 1 -type f -not -name "md5sum.txt" | xargs md5sum | tee $fld2md/md5sum.txt
+    fi
+}
+
 function gitarchive() {
     local repotgz=$1
     if which git-archive-all > /dev/null 2>&1 ; then
@@ -266,6 +275,8 @@ function archive_toolchain() {
     else
         tar_toolchain $tooldir $toolname
     fi
+    # calculate md5sum when toolchain is archived
+    md5sum_folder $basedir
 }
 
 function show_toolchain() {
@@ -298,6 +309,10 @@ function sync_toolchain() {
     if [ -d ${ShareInstalls}/${basedir} ] ; then
         echo "INFO: Removing existing ${ShareInstalls}/${basedir}"
         rm -rf ${ShareInstalls}/${basedir}
+    fi
+    if [ -f $localinstall/md5sum.txt ] ; then
+        echo "INFO: Check content of md5sum.txt"
+        cat $localinstall/md5sum.txt
     fi
     echo "INFO: Copy $localinstall to $ShareInstalls"
     command cp -rf ${localinstall} ${ShareInstalls}
