@@ -9,6 +9,7 @@ toolver=${TOOLVER:-}
 vendor=${TOOLVENDOR:-nuclei}
 dorebuild=${DOREBUILD:-}
 dorelease=${DORELEASE:-}
+ciarcloc=${CIARCLOC:-}
 
 # toolchain source directory
 toolsrcdir=$(readlink -f $SCRIPTDIR/../..)
@@ -167,6 +168,20 @@ function cleanup_build() {
     return 0
 }
 
+function copy_ci_artifact() {
+    local artifact=$1
+
+    if [ "x$ciarcloc" == "x" ] || [ "x$artifact" == "x" ] ; then
+        return
+    fi
+    if [ ! -d $ciarcloc ] || [ ! -f $artifact ]; then
+        echo "WARN:$ciarcloc or $artifact not exist, can't copy $artifact to $ciarcloc!"
+        return
+    fi
+    echo "Copy ci artifact $artifact to $ciarcloc"
+    command cp -f $artifact $ciarcloc
+}
+
 function md5sum_folder() {
     local fld2md=${1:-.}
 
@@ -247,6 +262,7 @@ function tar_toolchain() {
 
     command rm -f ${toolname}.tar.bz2
     tar -jcf ${toolname}.tar.bz2 -C $(dirname $tooldir) $(basename $tooldir)
+    copy_ci_artifact ${toolname}.tar.bz2
 }
 
 function zip_toolchain() {
@@ -262,6 +278,7 @@ function zip_toolchain() {
     echo "Archive toolchain in $tooldir to $toolname.zip"
     command rm -f ${toolname}.zip
     zip -9 -q -r ${toolname}.zip $(basename $tooldir)
+    copy_ci_artifact ${toolname}.tar.bz2
     popd
 }
 
