@@ -118,6 +118,7 @@ prepare_source:
     paths:
       - "*.log"
       - "*.env"
+      - cigen
   before_script:
     # check toolchain repo status
     - |
@@ -151,6 +152,9 @@ prepare_source:
     # set the toolver to branch name or tag name, see https://docs.gitlab.com/ee/ci/variables/predefined_variables.html
     - export citoolver=${CI_COMMIT_REF_SLUG}${CI_MERGE_REQUEST_PROJECT_ID}
     - echo "Build for toolchain version $citoolver, toolchain type $citooltype"
+    - mkdir -p cigen
+    - export CIARCLOC=$(pwd)/cigen
+    - echo "CI Artifacts will be generated into $CIARCLOC"
   tags:
     - env::docker
     - build::toolchain
