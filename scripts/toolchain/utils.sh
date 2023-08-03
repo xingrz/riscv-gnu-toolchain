@@ -149,7 +149,11 @@ function describe_repo() {
 function describe_build() {
     local builddesc=${1:-build.txt}
 
-    date --utc +%s > ${builddesc}
+    local buildstamp="Build timestamp: $(date --utc +%s)"
+    if [ "x${CI_JOB_ID}" != "x" ] ; then
+        buildstamp="$buildstamp, pipeline id: ${CI_PIPELINE_ID}, job id: ${CI_JOB_ID}"
+    fi
+    echo $buildstamp > ${builddesc}
     date >> ${builddesc}
 }
 
