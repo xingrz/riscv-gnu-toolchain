@@ -5,7 +5,7 @@
 [submodule "gcc"]
 	path = gcc
 	url = ../riscv-gcc
-	branch = nuclei/gcc-13
+	branch = nuclei/riscv-gcc13
 [submodule "glibc"]
 	path = glibc
 	url = ../riscv-glibc
@@ -41,4 +41,4 @@
 [submodule "llvm"]
 	path = llvm
 	url = ../llvm-project
-	branch = nuclei/16.x
+	branch = nuclei/17.x
