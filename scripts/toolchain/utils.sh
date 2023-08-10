@@ -27,6 +27,8 @@ if [ "$tooltype" == "xnewlibc" ] ; then
     maketarget="newlib"
 elif [ "x$tooltype" == "xglibc" ] ; then
     maketarget="linux"
+elif [ "x$tooltype" == "xmuslc" ] ; then
+    maketarget="musl"
 else
     tooltype="newlibc"
     maketarget="newlib"
