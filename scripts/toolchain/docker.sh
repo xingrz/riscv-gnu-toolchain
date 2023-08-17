@@ -52,7 +52,7 @@ function run_image() {
 
 
 img2run=$dockerrepo/$linbuildimg:$imgtag
-runcmd="scl enable devtoolset-7 rh-python36 bash"
+runcmd="scl enable devtoolset-8 rh-python36 bash"
 
 if [ "x$toolhost" == "xwin32" ] ; then
     echo "WARN: If you are build win32 toolchain, you need to add linux prebuilt riscv toolchain to PATH in docker enviroment!"
