@@ -20,10 +20,11 @@ winbuildimg=gnutoolchain-ubuntu18.04
 linbuildimg=gnutoolchain-centos6
 
 if [ "x$dockerrepo" == "x" ] ; then
-    if ping -qc 2 rego > /dev/null 2>&1; then
-        dockerrepo=rego.corp.nucleisys.com/software
-    else
-        dockerrepo=docker.io/nucleisoftware
+    dockerrepo=docker.io/nucleisoftware
+    if [[ $(hostname) == wh* ]] ; then
+        if ping -qc 2 rego > /dev/null 2>&1; then
+            dockerrepo=rego.corp.nucleisys.com/software
+        fi
     fi
 fi
 
