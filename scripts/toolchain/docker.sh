@@ -16,7 +16,7 @@ imgtag=${2:-latest}
 # toolchain source directory
 toolsrcdir=$(readlink -f $SCRIPTDIR/../..)
 
-winbuildimg=gnutoolchain-ubuntu18.04
+winbuildimg=gnutoolchain-ubuntu20.04
 linbuildimg=gnutoolchain-centos6
 
 if [ "x$dockerrepo" == "x" ] ; then
