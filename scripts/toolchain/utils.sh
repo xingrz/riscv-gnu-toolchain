@@ -221,6 +221,7 @@ function archive_gitrepo() {
 }
 
 # TODO: need to check build is pass or fail
+# currently rake task always return 0 even fail, need to fix it in libncrt repo
 function build_libncrt() {
     local repodir=${1:-$toolsrcdir/libncrt}
     local bldcfg=${2:-riscv64-unknown-elf}
