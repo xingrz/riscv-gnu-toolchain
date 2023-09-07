@@ -11,7 +11,7 @@ variables:
   GIT_DEPTH: "3"
   IMGSVR: rego.corp.nucleisys.com/software
   LINBUILDIMG: "gnutoolchain-centos6"
-  WINBUILDIMG: "gnutoolchain-ubuntu18.04"
+  WINBUILDIMG: "gnutoolchain-ubuntu20.04"
   IMGTAG: "latest"
   JOBS: 32
 
