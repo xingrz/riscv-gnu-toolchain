@@ -230,9 +230,15 @@ function build_libncrt() {
     if [ -d $repodir ] ; then
         pushd $repodir
         echo "Clean previous build for libncrt"
-        rm -rf build out
+        rm -rf build out build_libncrt.log
         echo "Build libncrt for conf $bldcfg, library generated into out, build objects into build"
-        rake conf=$bldcfg build_dir="build" out_dir="out"
+        rake conf=$bldcfg build_dir="build" out_dir="out" >build_libncrt.log 2>&1
+        # check the build log to see whether build libncrt library is pass or fail
+        if cat build_libncrt.log | grep "rake aborted" > /dev/null ; then
+            echo "Failed to build libncrt for conf $bldcfg!"
+            popd
+            return 1
+        fi
         if [ "x$libncrtczf" != "x" ] ; then
             libncrtdir=$(dirname $libncrtczf)
             mkdir -p $libncrtdir
@@ -245,6 +251,7 @@ function build_libncrt() {
     else
         echo "WARN: libncrt repo $repodir not exist!"
     fi
+    return 0
 }
 
 function install_libncrt_doc() {

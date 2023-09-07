@@ -180,7 +180,9 @@ if [ "x$tooltype" == "xnewlibc" ] && [ "x$dolibncrt" == "x1" ] && [ "x$dosuc" ==
             libncrtczf=$toolbasedir/nuclei_libncrt.tar.gz
             echo "INFO: libncrt library will not archived as $libncrtczf when build successfully"
             build_libncrt $toolsrcdir/libncrt $libncrtbldcfg $libncrtczf
-            if [ "x$dodoc" == "x1" ] ; then
+            # get return code of build libncrt to know build is pass or fail
+            dosuc=$?
+            if [ "x$dodoc" == "x1" ] && [ "x$dosuc" == "x0" ]; then
                 echo "INFO: Install libncrt doc into $toolprefix/share/pdf"
                 install_libncrt_doc $toolsrcdir/libncrt $toolprefix/share/pdf
             fi
