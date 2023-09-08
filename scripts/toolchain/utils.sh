@@ -220,6 +220,20 @@ function archive_gitrepo() {
     fi
 }
 
+# install libncrt to toolchain for linux and windows
+# rake conf=$bldcfg build_dir="build" out_dir="out" install only works for linux
+# so create this for win and linux
+function install_libncrt() {
+    local libncrtout=${1:-$toolsrcdir/libncrt/out}
+    local bldcfg=${2:-riscv64-unknown-elf}
+
+    local libncrtinstdir="${toolprefix}/${bldcfg}"
+    echo "Install libncrt library from $libncrtout to $libncrtinstdir"
+    pushd $libncrtout
+    command cp -rf * ${libncrtinstdir}
+    popd
+}
+
 # TODO: need to check build is pass or fail
 # currently rake task always return 0 even fail, need to fix it in libncrt repo
 function build_libncrt() {
@@ -229,6 +243,7 @@ function build_libncrt() {
 
     if [ -d $repodir ] ; then
         pushd $repodir
+        # build libncrt library
         echo "Clean previous build for libncrt"
         rm -rf build out build_libncrt.log
         echo "Build libncrt for conf $bldcfg, library generated into out, build objects into build"
@@ -245,8 +260,8 @@ function build_libncrt() {
             command rm -f $libncrtczf
             tar --owner=0 --group=0 --numeric-owner --transform "s/^out/libncrt/" -czf $libncrtczf out
         fi
-        echo "Install libncrt library into desired toolchain folder"
-        rake conf=$bldcfg build_dir="build" out_dir="out" install
+        # install libncrt library
+        install_libncrt $repodir/out
         popd
     else
         echo "WARN: libncrt repo $repodir not exist!"
