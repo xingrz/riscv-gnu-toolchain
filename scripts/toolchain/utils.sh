@@ -292,7 +292,7 @@ function zip_toolchain() {
     echo "Archive toolchain in $tooldir to $toolname.zip"
     command rm -f ${toolname}.zip
     zip -9 -q -r ${toolname}.zip $(basename $tooldir)
-    copy_ci_artifact ${toolname}.tar.bz2
+    copy_ci_artifact ${toolname}.zip
     popd
 }
 
