@@ -25,7 +25,7 @@
 [submodule "qemu"]
 	path = qemu
 	url = ../qemu
-	branch = nuclei/7.2
+	branch = nuclei/8.0
 [submodule "musl"]
 	path = musl
 	url = ../musl
