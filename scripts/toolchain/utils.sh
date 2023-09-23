@@ -280,7 +280,7 @@ function install_libncrt_doc() {
     echo "Install libncrt sample code into $dstdir"
     local samplecodefile=$repodir/emrun/Src/fileops_uart.c
     if [ -f $samplecodefile ] ; then
-        command cp -f  $dstdir/libncrt_fileops_reference.c
+        command cp -f $samplecodefile $dstdir/libncrt_fileops_reference.c
     fi
 }
 
