@@ -49,6 +49,15 @@ function show_repo_status() {
     git submodule
 }
 
+function check_submodule() {
+    if git submodule | grep -e "^[-|+]" ; then
+        # submodule is not up to date or cloned
+        return 1
+    else
+        return 0
+    fi
+}
+
 function git_clone_repo() {
     local repo=${1}
     local repodir=${2}
@@ -78,6 +87,7 @@ function git_submodule_update() {
 }
 
 function init_toolchain_repo() {
+    local retcode=0
     if [ ! -d $toolsrcdir ] ; then
         git_clone_repo ${toolchain_repo} ${toolsrcdir} ${toolchain_branch}
     else
@@ -97,8 +107,12 @@ function init_toolchain_repo() {
             echo "NOTICE: submodule repo is already initialized, will not update it!"
         fi
         show_repo_status
+        if ! check_submodule ; then
+            retcode=1
+        fi
     fi
     popd
+    return $retcode
 }
 
 function check_gito() {
@@ -112,13 +126,18 @@ function check_gito() {
 }
 
 function clone_libncrt() {
+    local retcode=0
     echo "INFO: Clone nuclei c runtime library source code to libncrt"
     git_clone_repo ${libncrt_repo} ${toolsrcdir}/libncrt ${libncrt_branch}
 
     pushd $toolsrcdir/libncrt
     git_submodule_update
     show_repo_status
+    if ! check_submodule ; then
+        retcode=1
+    fi
     popd
+    return $retcode
 }
 
 function init_libncrt_repo() {
@@ -128,15 +147,27 @@ function init_libncrt_repo() {
     fi
     if check_gito ; then
         clone_libncrt
-        return 0
+        return $?
     else
-        return 1
+        echo "No access right to libncrt source code!"
+        return 0
     fi
 }
 
 echo "INFO: Prepare riscv toolchain source code"
-init_toolchain_repo
-init_libncrt_repo
+retcode=0
+if ! init_toolchain_repo ; then
+    echo "Toolchain repo is not ready for use!"
+    retcode=1
+fi
+if ! init_libncrt_repo ; then
+    echo "Libncrt repo is not ready for use!"
+    retcode=1
+fi
 
-echo "INFO: Toolchain source code is ready in $toolsrcdir"
-exit 0
+if [ "$retcode" == "0" ] ; then
+    echo "INFO: Toolchain source code is ready in $toolsrcdir"
+else
+    echo "ERROR: Toolchain source code is not ready in $toolsrcdir"
+fi
+exit $retcode
