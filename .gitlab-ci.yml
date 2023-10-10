@@ -35,7 +35,12 @@ prepare_source:
   # https://docs.gitlab.com/ee/ci/yaml/#timeout
   # clone takes about 10min, upload artifacts need more time
   timeout: 25m
-  retry: 2
+  retry:
+    max: 2
+    when:
+      # ERROR: Job failed (system failure): Cannot connect to the Docker daemon at unix:///var/run/docker.sock. Is the docker daemon running? (docker.go:534:120s)
+      # https://docs.gitlab.com/ee/ci/yaml/#retrywhen
+      - runner_system_failure
   image: $IMGSVR/$LINBUILDIMG:$IMGTAG
   variables:
     # develop branch is used to track latest working version
