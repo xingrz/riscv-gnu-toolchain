@@ -44,7 +44,8 @@ prepare_source:
   image: $IMGSVR/$LINBUILDIMG:$IMGTAG
   variables:
     # develop branch is used to track latest working version
-    libncrtbranch: develop
+    # master branch is used to track latest release version
+    libncrtbranch: master
   script:
     - free -g
     - command -v ssh-agent >/dev/null
