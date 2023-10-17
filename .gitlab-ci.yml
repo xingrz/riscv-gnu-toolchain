@@ -114,10 +114,6 @@ prepare_source:
       artifacts: true
   variables:
     GIT_STRATEGY: none
-  except:
-    changes:
-      - LICENSE
-      - "*.md"
   artifacts:
     name: "${CI_JOB_NAME}-${citooltype}_${CI_COMMIT_SHA::8}"
     when: always
@@ -261,10 +257,6 @@ release:
   parallel:
     matrix:
       - citooltype: ["newlibc", "glibc"]
-  except:
-    changes:
-      - LICENSE
-      - "*.md"
   script:
     - export TOOLVER=${CI_COMMIT_REF_SLUG}
     - export TOOLTYPE=${citooltype}
