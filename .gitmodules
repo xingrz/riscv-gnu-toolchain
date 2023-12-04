@@ -9,7 +9,7 @@
 [submodule "glibc"]
 	path = glibc
 	url = ../riscv-glibc
-	branch = nuclei/2.37
+	branch = nuclei/2.38
 [submodule "dejagnu"]
 	path = dejagnu
 	url = ../riscv-dejagnu
