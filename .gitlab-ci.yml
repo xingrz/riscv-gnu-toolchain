@@ -34,7 +34,7 @@ prepare_source:
   interruptible: true
   # https://docs.gitlab.com/ee/ci/yaml/#timeout
   # clone takes about 10min, upload artifacts need more time
-  timeout: 25m
+  timeout: 30m
   retry:
     max: 2
     when:
@@ -102,6 +102,7 @@ prepare_source:
 ## Job template
 .build_job_template: &build_job_template_default
   stage: build
+  timeout: 6h
   interruptible: true
   # https://docs.gitlab.com/ee/ci/yaml/index.html#retrywhen
   retry:
