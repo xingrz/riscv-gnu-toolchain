@@ -23,12 +23,15 @@ TOOLNAME=gcc
 ShareLoc=${SHARELOC:-/home/share/devtools/toolchain/nuclei_gnu}
 
 maketarget="newlib"
+stripcmd="riscv64-unknown-elf-strip"
 if [ "$tooltype" == "xnewlibc" ] ; then
     maketarget="newlib"
 elif [ "x$tooltype" == "xglibc" ] ; then
     maketarget="linux"
+    stripcmd="riscv64-unknown-linux-gnu-strip"
 elif [ "x$tooltype" == "xmuslc" ] ; then
     maketarget="musl"
+    stripcmd="riscv64-unknown-linux-musl-strip"
 else
     tooltype="newlibc"
     maketarget="newlib"
@@ -124,6 +127,9 @@ function prepare_buildenv() {
     if [ "x$toolhost" == "xwin32" ] ; then
         echo "INFO: Add prebuilt linux host riscv toolchain $lintoolprefix into PATH"
         export PATH=$lintoolprefix/bin:$PATH
+    else
+        echo "INFO: Add prebuilt riscv toolchain $lintoolprefix into PATH"
+        export PATH=$toolprefix/bin:$PATH
     fi
 }
 
@@ -328,6 +334,38 @@ function archive_toolchain() {
     fi
     # calculate md5sum when toolchain is archived
     md5sum_folder $basedir
+}
+
+function strip_toolchain() {
+    local tooldir=${1:-${toolprefix}}
+
+    pushd $tooldir
+    szbefore=$(du -sh . | cut -f1)
+    echo "Toolchain size before stripped is $szbefore"
+    for chkdir in bin libexec lib lib64 riscv* ; do
+        for fnd in `find $chkdir -type f \( -executable -o -name "*.so*" -o -name "*.a" -o -name "*.o" \) 2>/dev/null` ; do
+            orgfilesz=$(stat -c %s $fnd)
+            for scmd in "strip" ${stripcmd} ; do
+                $scmd --strip-unneeded $fnd 2>&1 | grep format > /dev/null
+                sret=$?
+                # strip command always return 0, so we need to use grep to check whether strip pass
+                # grep file format not recognized
+                # grep Unable to recognise the format of the input file
+                if [ "x$sret" == "x1" ] ; then
+                    stripfilesz=$(stat -c %s $fnd)
+                    if [ "$stripfilesz" == "$orgfilesz" ] ; then
+                        break
+                    fi
+                    decpct=$(echo "scale=3; 100 * ($orgfilesz - $stripfilesz) / $orgfilesz" | bc)
+                    echo "Stripped $fnd using $scmd, size decreased from $orgfilesz to $stripfilesz bytes by ${decpct}%"
+                    break
+                fi
+            done
+        done
+    done
+    szafter=$(du -sh . | cut -f1)
+    echo "Toolchain size stripped from $szbefore to $szafter"
+    popd
 }
 
 function show_toolchain() {

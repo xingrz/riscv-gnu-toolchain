@@ -162,7 +162,7 @@ dosuc=$?
 
 if [ "x$dostrip" == "x1" ] && [ -d $toolprefix/bin ] ; then
     echo "INFO: Strip toolchain in $toolprefix"
-    make strip
+    strip_toolchain
 else
     echo "INFO: Toolchain is not stripped"
 fi
