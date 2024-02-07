@@ -342,11 +342,37 @@ function strip_toolchain() {
     pushd $tooldir
     szbefore=$(du -sh . | cut -f1)
     echo "Toolchain size before stripped is $szbefore"
-    for chkdir in bin libexec lib lib64 riscv* ; do
+    for chkdir in bin libexec lib lib64 sysroot riscv* ; do
         for fnd in `find $chkdir -type f \( -executable -o -name "*.so*" -o -name "*.a" -o -name "*.o" \) 2>/dev/null` ; do
+            if [ -L $fnd ]; then
+                continue
+            fi
+            filetype=$(file $fnd | cut -d ":" -f2)
+            fndtype="linexe"
+            if echo "$filetype" | grep -q "PE.* executable" ; then
+                fndtype="winexe"
+            elif echo "$filetype" | grep -q "ELF" ; then
+                fndtype="linexe"
+                if echo "$filetype" | grep -q "RISC-V" ; then
+                    fndtype="riscvexe"
+                fi
+            elif echo "$filetype" | grep -q "ar archive" ; then
+                fndtype="ar"
+            else
+                continue
+            fi
             orgfilesz=$(stat -c %s $fnd)
             for scmd in "strip" ${stripcmd} ; do
-                $scmd --strip-unneeded $fnd 2>&1 | grep format > /dev/null
+                if [[ $fnd == *.a ]] ; then
+                    stripopt="-g --remove-section=.comment --remove-section=.note --enable-deterministic-archives"
+                elif [[ $fnd == *.o ]] ; then
+                    stripopt="-g --remove-section=.comment --remove-section=.note"
+                elif [[ $fnd == *.so* ]] ; then
+                    stripopt="--strip-unneeded --remove-section=.comment --remove-section=.note"
+                else
+                    stripopt="--strip-unneeded --remove-section=.comment --remove-section=.note"
+                fi
+                $scmd $stripopt $fnd 2>&1 | grep format > /dev/null
                 sret=$?
                 # strip command always return 0, so we need to use grep to check whether strip pass
                 # grep file format not recognized
@@ -358,7 +384,7 @@ function strip_toolchain() {
                     fi
                     #decpct=$(echo "scale=3; 100 * ($orgfilesz - $stripfilesz) / $orgfilesz" | bc)
                     decpct=$(awk "BEGIN {printf \"%.2f\", 100 * ($orgfilesz - $stripfilesz) / $orgfilesz}")
-                    echo "Stripped $fnd using $scmd, size decreased from $orgfilesz to $stripfilesz bytes by ${decpct}%"
+                    echo "Stripped $fnd, type $fndtype using $scmd $stripopt, size decreased from $orgfilesz to $stripfilesz bytes by ${decpct}%"
                     break
                 fi
             done
