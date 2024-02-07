@@ -356,7 +356,8 @@ function strip_toolchain() {
                     if [ "$stripfilesz" == "$orgfilesz" ] ; then
                         break
                     fi
-                    decpct=$(echo "scale=3; 100 * ($orgfilesz - $stripfilesz) / $orgfilesz" | bc)
+                    #decpct=$(echo "scale=3; 100 * ($orgfilesz - $stripfilesz) / $orgfilesz" | bc)
+                    decpct=$(awk "BEGIN {printf \"%.2f\", 100 * ($orgfilesz - $stripfilesz) / $orgfilesz}")
                     echo "Stripped $fnd using $scmd, size decreased from $orgfilesz to $stripfilesz bytes by ${decpct}%"
                     break
                 fi
