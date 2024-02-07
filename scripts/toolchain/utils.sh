@@ -358,36 +358,46 @@ function strip_toolchain() {
                 fi
             elif echo "$filetype" | grep -q "ar archive" ; then
                 fndtype="ar"
+                if readelf -h $fnd 2>&1 | grep -q "Machine: * RISC-V" ; then
+                    fndtype="riscvar"
+                fi
             else
                 continue
             fi
             orgfilesz=$(stat -c %s $fnd)
-            for scmd in "strip" ${stripcmd} ; do
-                if [[ $fnd == *.a ]] ; then
-                    stripopt="-g --remove-section=.comment --remove-section=.note --enable-deterministic-archives"
-                elif [[ $fnd == *.o ]] ; then
-                    stripopt="-g --remove-section=.comment --remove-section=.note"
-                elif [[ $fnd == *.so* ]] ; then
-                    stripopt="--strip-unneeded --remove-section=.comment --remove-section=.note"
-                else
-                    stripopt="--strip-unneeded --remove-section=.comment --remove-section=.note"
+            # not using try loop like previous commit because strip may work wrong on riscv elf
+            scmd="strip"
+            if [[ $fndtype == riscv* ]] ; then
+                scmd=${stripcmd}
+            fi
+            # options to strip comments
+            ## strip out extra .comment and .note for gwarf-4 debug newlib/libgcc/libstdc++ can decrease size from 7.1G to 3.1G
+            ## otherwise it will decrease size from 7.3G to 3.1G, so we can keep .comment and .note
+            #stripcmtopt="--remove-section=.comment --remove-section=.note"
+            stripcmtopt=""
+            if [[ $fnd == *.a ]] ; then
+                stripopt="-g --enable-deterministic-archives $stripcmtopt"
+            elif [[ $fnd == *.o ]] ; then
+                stripopt="-g $stripcmtopt"
+            elif [[ $fnd == *.so* ]] ; then
+                stripopt="--strip-unneeded $stripcmtopt"
+            else
+                stripopt="--strip-unneeded $stripcmtopt"
+            fi
+            $scmd $stripopt $fnd 2>&1 | grep -q "format"
+            sret=$?
+            # strip command always return 0, so we need to use grep to check whether strip pass
+            # grep file format not recognized
+            # grep Unable to recognise the format of the input file
+            if [ "x$sret" == "x1" ] ; then
+                stripfilesz=$(stat -c %s $fnd)
+                if [ "$stripfilesz" == "$orgfilesz" ] ; then
+                    continue
                 fi
-                $scmd $stripopt $fnd 2>&1 | grep format > /dev/null
-                sret=$?
-                # strip command always return 0, so we need to use grep to check whether strip pass
-                # grep file format not recognized
-                # grep Unable to recognise the format of the input file
-                if [ "x$sret" == "x1" ] ; then
-                    stripfilesz=$(stat -c %s $fnd)
-                    if [ "$stripfilesz" == "$orgfilesz" ] ; then
-                        break
-                    fi
-                    #decpct=$(echo "scale=3; 100 * ($orgfilesz - $stripfilesz) / $orgfilesz" | bc)
-                    decpct=$(awk "BEGIN {printf \"%.2f\", 100 * ($orgfilesz - $stripfilesz) / $orgfilesz}")
-                    echo "Stripped $fnd, type $fndtype using $scmd $stripopt, size decreased from $orgfilesz to $stripfilesz bytes by ${decpct}%"
-                    break
-                fi
-            done
+                #decpct=$(echo "scale=3; 100 * ($orgfilesz - $stripfilesz) / $orgfilesz" | bc)
+                decpct=$(awk "BEGIN {printf \"%.2f\", 100 * ($orgfilesz - $stripfilesz) / $orgfilesz}")
+                echo "Stripped $fnd, type $fndtype using $scmd $stripopt, size decreased from $orgfilesz to $stripfilesz bytes by ${decpct}%"
+            fi
         done
     done
     szafter=$(du -sh . | cut -f1)
