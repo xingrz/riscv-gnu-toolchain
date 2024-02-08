@@ -353,7 +353,10 @@ function strip_toolchain() {
                 fndtype="winexe"
             elif echo "$filetype" | grep -q "ELF" ; then
                 fndtype="linexe"
-                if echo "$filetype" | grep -q "RISC-V" ; then
+                ## centos 6.10 file version is 5.04 which cannot determine RISC-V elf, so we use readelf to handle this
+                #if echo "$filetype" | grep -q "RISC-V" ; then
+                ## centos 6.10 readelf version 2.30-55.el6.2 works and can get RISC-V machine tag
+                if readelf -h $fnd 2>&1 | grep -q "Machine: * RISC-V" ; then
                     fndtype="riscvexe"
                 fi
             elif echo "$filetype" | grep -q "ar archive" ; then
@@ -392,6 +395,7 @@ function strip_toolchain() {
             if [ "x$sret" == "x1" ] ; then
                 stripfilesz=$(stat -c %s $fnd)
                 if [ "$stripfilesz" == "$orgfilesz" ] ; then
+                    echo "Unstripped $fnd, type $fndtype using $scmd $stripopt, size unchanged, ${stripfilesz} bytes"
                     continue
                 fi
                 #decpct=$(echo "scale=3; 100 * ($orgfilesz - $stripfilesz) / $orgfilesz" | bc)
