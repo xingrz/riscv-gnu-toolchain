@@ -210,6 +210,7 @@ if [ "x$dosuc" == "x0" ] ; then
         echo "INFO: Archive the toolchain source code and built toolchain in $toolprefix!"
         archive_gitrepo
         archive_toolchain
+        show_toolchain
     fi
     if [ "x$dobuild" == "x1" ]; then
         echo "INFO: Find successful build artifacts in the install directory in $toolprefix"
