@@ -1,23 +1,23 @@
 [submodule "binutils"]
 	path = binutils
 	url = ../riscv-binutils-gdb
-	branch = nuclei/binutils-2_40
+	branch = nuclei/binutils-2_42
 [submodule "gcc"]
 	path = gcc
 	url = ../riscv-gcc
-	branch = nuclei/riscv-gcc13
+	branch = nuclei/riscv-gcc14
 [submodule "glibc"]
 	path = glibc
 	url = ../riscv-glibc
-	branch = nuclei/2.38
+	branch = nuclei/2.39
 [submodule "dejagnu"]
 	path = dejagnu
 	url = ../riscv-dejagnu
-	branch = dejagnu-1.6.3
+	branch = nuclei/dejagnu
 [submodule "newlib"]
 	path = newlib
 	url = ../riscv-newlib
-	branch = nuclei/newlib-4.3.0
+	branch = nuclei/newlib-4.4.0
 [submodule "gdb"]
 	path = gdb
 	url = ../riscv-binutils-gdb
@@ -25,7 +25,7 @@
 [submodule "qemu"]
 	path = qemu
 	url = ../qemu
-	branch = nuclei/8.0
+	branch = nuclei/9.0
 [submodule "musl"]
 	path = musl
 	url = ../musl
@@ -41,4 +41,4 @@
 [submodule "llvm"]
 	path = llvm
 	url = ../llvm-project
-	branch = nuclei/17.x
+	branch = nuclei/18.x
