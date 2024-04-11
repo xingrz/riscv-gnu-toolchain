@@ -21,7 +21,7 @@
 [submodule "gdb"]
 	path = gdb
 	url = ../riscv-binutils-gdb
-	branch = nuclei/gdb-13
+	branch = nuclei/gdb-14
 [submodule "qemu"]
 	path = qemu
 	url = ../qemu
