@@ -150,6 +150,7 @@ fi
 
 # Prepare build environment
 prepare_buildenv
+prepare_prerequisites
 
 if [ "x$dobuild" == "x1" ] ; then
     echo "INFO: Do toolchain build for target $maketarget in 3s"

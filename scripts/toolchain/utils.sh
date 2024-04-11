@@ -133,6 +133,24 @@ function prepare_buildenv() {
     fi
 }
 
+function prepare_prerequisites() {
+    pushd $toolsrcdir/gcc
+    echo "Prepare gcc and gdb prerequisites"
+    if [ -f contrib/download_prerequisites ] ; then
+        if ./contrib/download_prerequisites ; then
+            echo "Successfully downloaded gcc prerequisites!"
+            pushd $toolsrcdir/gdb
+            echo "Make symlink to gcc gmp and mpfr prerequisites for gdb"
+            [ -L gmp ] && rm -f gmp && ln -s -f ../gcc/gmp .
+            [ -L mpfr ] && rm -f mpfr && ln -s -f ../gcc/mpfr .
+            popd
+        else
+            echo "Error: failed to download gcc prerequisites"
+        fi
+    fi
+    popd
+}
+
 function describe_repo() {
     local repodir=${1}
     local repodesc=${2:-gitrepo.txt}
