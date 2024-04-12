@@ -133,16 +133,34 @@ function prepare_buildenv() {
     fi
 }
 
+function symlink_gcc_prereq() {
+    local req=$1
+
+    if [ "x$req" == "x" ] ; then
+        return
+    fi
+    if [ -L $req ] ; then
+        echo "Remove existing symolic link $req"
+        rm -f $req
+    fi
+    if [ ! -L $req ] ; then
+        echo "Do symlink ../gcc/$req -> $req"
+        ln -s -f ../gcc/$req .
+    fi
+}
+
 function prepare_prerequisites() {
     pushd $toolsrcdir/gcc
+    # required by gdb 14.x now, see https://sourceware.org/git/?p=binutils-gdb.git;a=commit;h=991180627851801f1999d1ebbc0e569a17e47c74
     echo "Prepare gcc and gdb prerequisites"
     if [ -f contrib/download_prerequisites ] ; then
         if ./contrib/download_prerequisites ; then
             echo "Successfully downloaded gcc prerequisites!"
             pushd $toolsrcdir/gdb
             echo "Make symlink to gcc gmp and mpfr prerequisites for gdb"
-            [ -L gmp ] && rm -f gmp && ln -s -f ../gcc/gmp .
-            [ -L mpfr ] && rm -f mpfr && ln -s -f ../gcc/mpfr .
+            symlink_gcc_prereq gmp
+            symlink_gcc_prereq mpfr
+            symlink_gcc_prereq isl
             popd
         else
             echo "Error: failed to download gcc prerequisites"
