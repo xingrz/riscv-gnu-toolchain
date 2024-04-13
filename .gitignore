@@ -14,3 +14,5 @@ libncrt*
 /stamps/
 /Local*/
 *.log
+logs/
+log/
