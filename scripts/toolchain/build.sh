@@ -161,6 +161,8 @@ else
 fi
 dosuc=$?
 
+echo "INFO: toolchain build status $dosuc"
+
 if [ "x$dostrip" == "x1" ] && [ -d $toolprefix/bin ] ; then
     echo "INFO: Strip toolchain in $toolprefix"
     strip_toolchain
@@ -196,12 +198,19 @@ if [ "x$tooltype" == "xnewlibc" ] && [ "x$dolibncrt" == "x1" ] && [ "x$dosuc" ==
     fi
 fi
 
+collect_build_logfiles logs
+
 if [ "x$doclean" == "x1" ]  ; then
     if [ "x$dosuc" == "x0" ] ; then
         echo "INFO: Clean build directory in $toolbuilddir"
         rm -rf $toolbuilddir
     else
-        echo "ERROR: Toolchain build is failing, will not remove build directory, please check $toolbuilddir"
+        if [[ "$CI_PIPELINE_ID" =~ ^[0-9]+$ ]] ; then
+            echo "ERROR: Toolchain build is failing in ci pipeline, to reduce disk usage, will remove build directory, please check logfile collected in logs/"
+            rm -rf $toolbuilddir
+        else
+            echo "ERROR: Toolchain build is failing, will not remove build directory, please check $toolbuilddir"
+        fi
     fi
 else
     echo "INFO: Find the build directory in $toolbuilddir, remove it by yourself!"

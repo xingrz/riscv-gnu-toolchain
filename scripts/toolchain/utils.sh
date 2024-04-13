@@ -201,6 +201,27 @@ function describe_build() {
     date >> ${builddesc}
 }
 
+function collect_build_logfiles() {
+    local logdir=${1:-logs}
+    local builddir=${2:-$toolbuilddir}
+
+    local buildname=$(basename $builddir)
+
+    mkdir -p $logdir
+
+    local logbuildzip=$(readlink -f $logdir)/${buildname}.zip
+
+
+    if [ -f $logbuildzip ] ; then
+        echo "Remove existing $logbuildzip"
+        rm -f $logbuildzip
+    fi
+    echo "Collect all found *.log in $buildir and zip to $logbuildzip"
+    pushd $buildir
+    find . -name "*.log" | xargs zip $logbuildzip
+    popd
+}
+
 function cleanup_build() {
     local cleaninstall=${1:-}
     local dir2rm=$LocalBuilds/${toolver}_${tooltag}_*
@@ -290,6 +311,8 @@ function build_libncrt() {
         rm -rf build out build_libncrt.log
         echo "Build libncrt for conf $bldcfg, library generated into out, build objects into build"
         rake conf=$bldcfg build_dir="build" out_dir="out" >build_libncrt.log 2>&1
+        echo "Backup libncrt build log build_libncrt.log to $toolbuilddir"
+        cp -f build_libncrt.log $toolbuilddir/
         # check the build log to see whether build libncrt library is pass or fail
         if cat build_libncrt.log | grep "rake aborted" > /dev/null ; then
             echo "Failed to build libncrt for conf $bldcfg!"
