@@ -216,8 +216,8 @@ function collect_build_logfiles() {
         echo "Remove existing $logbuildzip"
         rm -f $logbuildzip
     fi
-    echo "Collect all found *.log in $buildir and zip to $logbuildzip"
-    pushd $buildir
+    echo "Collect all found *.log in $builddir and zip to $logbuildzip"
+    pushd $builddir
     find . -name "*.log" | xargs zip $logbuildzip
     popd
 }
