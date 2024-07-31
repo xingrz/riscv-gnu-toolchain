@@ -168,13 +168,15 @@ prepare_source:
 ## Job for build linux host toolchain
 build_linux:
   <<: *build_job_template_default
-  image: $IMGSVR/$WINBUILDIMG:$IMGTAG
+  image: $IMGSVR/$LINBUILDIMG:$IMGTAG
   parallel:
     matrix:
       - citooltype: ["newlibc", "glibc"]
   script:
     # copy the template
     - cp -f scripts/toolchain/buildenv.sample build.env
+    # source scl environment https://listman.redhat.com/archives/sclorg/2020-October/msg00000.html
+    - source scl_source enable devtoolset-8 rh-python36 || true
     - which gcc python3
     - BUILDENV=build.env source scripts/toolchain/setup_env.sh
     - export TOOLVER=${citoolver}
