@@ -83,6 +83,10 @@ cp scripts/toolchain/buildenv.sample mybuild.env
 # Modify the environment variables in mybuild.env, see variable description in scripts/toolchain/build.sh
 # No need to set TOOLHOST, it will be guessed by build.sh script
 # Then use the build environment file like this
+# Suggestion for normal development:
+# you can set DOCLEAN=0 and DOCLEANPREFIX=1 : it will clean prebuilt toolchain for each fresh build and dont cleanup
+# build folder for a successful build, then you can goto the build folder, and just go to selected build step folder
+# to build and install such as gcc without a full rebuild -> just refer to the generated makefile steps
 BUILDENV=mybuild.env source ./scripts/toolchain/setup_env.sh
 # Now you can build toolchain now, and overwrite some variables during build like this
 ## eg. I want to change the toolchain version TOOLVER to 2023.04-test1, use 32 jobs
@@ -116,4 +120,55 @@ If you want to sync successfully built toolchain to internal share location, you
 ~~~shell
 # Assume you want to sync tool version 2023.04-eng1 linux64 newlibc
 TOOLVER=2023.04-eng1 TOOLHOST=linux64 TOOLTYPE=newlibc ./scripts/toolchain/release.sh
+~~~
+
+## FAQ
+
+1. If compiling is failing unexpectedly, please check whether required gcc third party libraries are downloaded, and required gdb third party library is linked to gcc folder.
+
+see example structure as below:
+
+~~~
+riscv-gnu-toolchain/gcc $ git clean -fdx --dry-run
+Would remove gettext
+Would remove gettext-0.22.tar.gz
+Would remove gettext-0.22/
+Would remove gmp
+Would remove gmp-6.2.1.tar.bz2
+Would remove gmp-6.2.1/
+Would remove isl
+Would remove isl-0.24.tar.bz2
+Would remove isl-0.24/
+Would remove mpc
+Would remove mpc-1.2.1.tar.gz
+Would remove mpc-1.2.1/
+Would remove mpfr
+Would remove mpfr-4.1.0.tar.bz2
+Would remove mpfr-4.1.0/
+riscv-gnu-toolchain/gcc $ cd ../gdb
+riscv-gnu-toolchain/gdb $ git clean -fdx --dry-run
+Would remove gmp
+Would remove isl
+Would remove mpfr
+riscv-gnu-toolchain/gdb $ ls -l mpfr gmp isl
+lrwxrwxrwx 1 hqfang hqfang 10 Aug 13 14:36 gmp -> ../gcc/gmp/
+lrwxrwxrwx 1 hqfang hqfang 10 Aug 13 14:36 isl -> ../gcc/isl/
+lrwxrwxrwx 1 hqfang hqfang 11 Aug 13 14:36 mpfr -> ../gcc/mpfr/
+~~~
+
+You can try to rebuild the toolchain again.
+
+2. Clean the prebuilt toolchain folder via `DOCLEANPREFIX` variable.
+
+Sometimes toolchain build will fail due to prebuilt toolchain folder is not removed,
+you can change the build environment file eg `mybuild.env`'s `DOCLEANPREFIX` from 0 to 1, and
+then setup the toolchain environment again to make sure the prebuilt toolchain is removed.
+
+example log output as below:
+
+~~~
+WARN: Create local build folder /work/LocalBuilds/2024.08_linux64_glibc_20240813_063601 for toolchain build
+INFO: Remove existing install folder for toolchain
+WARN: Create local install folder for toolchain installation
+INFO: Enable llvm build
 ~~~
