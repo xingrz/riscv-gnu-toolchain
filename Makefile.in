@@ -673,8 +673,6 @@ stamps/build-newlib: $(NEWLIB_SRCDIR) $(NEWLIB_SRC_GIT) stamps/build-gcc-newlib-
 		--enable-newlib-io-long-double \
 		--enable-newlib-io-long-long \
 		--enable-newlib-io-c99-formats \
-		--enable-newlib-retargetable-locking \
-		--enable-newlib-reent-check-verify \
 		--enable-newlib-register-fini \
 		CFLAGS_FOR_TARGET="-O2 -D_POSIX_MODE -ffunction-sections -fdata-sections $(CFLAGS_FOR_TARGET)" \
 		CXXFLAGS_FOR_TARGET="-O2 -D_POSIX_MODE -ffunction-sections -fdata-sections $(CXXFLAGS_FOR_TARGET)"
@@ -693,8 +691,6 @@ stamps/build-newlib-nano: $(NEWLIB_SRCDIR) $(NEWLIB_SRC_GIT) stamps/build-gcc-ne
 		$(CONFIGURE_HOST) \
 		--prefix=$(builddir)/install-newlib-nano \
 		--enable-newlib-reent-small \
-		--enable-newlib-retargetable-locking \
-		--enable-newlib-reent-check-verify \
 		--disable-newlib-fvwrite-in-streamio \
 		--disable-newlib-fseek-optimization \
 		--disable-newlib-wide-orient \
