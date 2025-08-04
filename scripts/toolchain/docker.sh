@@ -8,7 +8,7 @@ dockerrepo=${DOCKERREPO:-}
 pullfirst=${PULLFIRST:-}
 
 # arguments
-# arg 1: toolchain to be built for, default linux64, otherwise will be win32
+# arg 1: toolchain to be built for, default linux64, otherwise will be win64
 # arg 2: docker image tag, default latest
 toolhost=${1:-linux64}
 imgtag=${2:-latest}
@@ -17,7 +17,7 @@ imgtag=${2:-latest}
 toolsrcdir=$(readlink -f $SCRIPTDIR/../..)
 
 winbuildimg=gnutoolchain-ubuntu20.04
-linbuildimg=gnutoolchain-centos6
+linbuildimg=gnutoolchain-centos7
 
 if [ "x$dockerrepo" == "x" ] ; then
     dockerrepo=docker.io/nucleisoftware
@@ -53,10 +53,10 @@ function run_image() {
 
 
 img2run=$dockerrepo/$linbuildimg:$imgtag
-runcmd="scl enable devtoolset-8 rh-python36 bash"
+runcmd="scl enable devtoolset-9 rh-python38 bash"
 
-if [ "x$toolhost" == "xwin32" ] ; then
-    echo "WARN: If you are build win32 toolchain, you need to add linux prebuilt riscv toolchain to PATH in docker enviroment!"
+if [[ "$toolhost" == "win"* ]] ; then
+    echo "WARN: If you are build $toolhost toolchain, you need to add linux prebuilt riscv toolchain to PATH in docker enviroment!"
     img2run=$dockerrepo/$winbuildimg:$imgtag
     runcmd="bash"
 else

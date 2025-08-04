@@ -37,10 +37,10 @@ else
     maketarget="newlib"
 fi
 
-if [ "x$toolhost" != "xwin32" ] && [ "x$toolhost" != "xlinux64" ] ; then
+if [[ "$toolhost" != "win"* ]] && [ "x$toolhost" != "xlinux64" ] ; then
     if [ "x$dorelease" != "x1" ] ; then
         if cat /etc/issue | grep -i ubuntu ; then
-            toolhost="win32"
+            toolhost="win64"
         else
             toolhost="linux64"
         fi
@@ -124,7 +124,7 @@ fi
 toolbasedir="${toolprefix}/.."
 
 function prepare_buildenv() {
-    if [ "x$toolhost" == "xwin32" ] ; then
+    if [[ "$toolhost" == "win"* ]] ; then
         echo "INFO: Add prebuilt linux host riscv toolchain $lintoolprefix into PATH"
         export PATH=$lintoolprefix/bin:$PATH
     else
@@ -265,7 +265,7 @@ function gitarchive() {
     if which git-archive-all > /dev/null 2>&1 ; then
         git-archive-all ${repotgz}
     else
-        git ls-files --recurse-submodules | tar --quoting-style=locale -czf ${repotgz} -T-
+        git ls-files --recurse-submodules | tar --ignore-failed-read --quoting-style=locale -czf ${repotgz} -T-
     fi
 }
 
@@ -386,7 +386,7 @@ function archive_toolchain() {
     local basedir=$(readlink -f ${toolbasedir})
     local toolname=$basedir/${vendor}_riscv_${tooltype}_prebuilt_${toolhost}_$(basename $basedir)
 
-    if [ "x$toolhost" == "xwin32" ] ; then
+    if [[ "$toolhost" == "win"* ]] ; then
         zip_toolchain $tooldir $toolname
     else
         tar_toolchain $tooldir $toolname

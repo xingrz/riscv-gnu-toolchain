@@ -5,7 +5,7 @@ SCRIPTDIR=$(readlink -f $SCRIPTDIR)
 
 # environment variables such as
 # TOOLTYPE: newlibc or glibc
-# TOOLHOST: win32 or linux64, guess by docker os type(centos or ubuntu)
+# TOOLHOST: win32, win64 or linux64, guess by docker os type(centos or ubuntu)
 # TOOLVER: default will be build date timestamp, such as 20230406_104544
 # MULTILIBGEN: multilib gen configuration
 # DOLIBDEBUG: enable debug information when build library such as newlibc/glibc, default no
@@ -85,8 +85,11 @@ if [ ! -d $toolprefix ] ; then
 fi
 
 if [ "x$toolhost" == "xwin32" ] ; then
-    echo "INFO: Configure for windows host build"
+    echo "INFO: Configure for windows 32bit host build"
     confopts="--with-host=i686-w64-mingw32 $confopts"
+elif [ "x$toolhost" == "xwin64" ] ; then
+    echo "INFO: Configure for windows 64bit host build"
+    confopts="--with-host=x86_64-w64-mingw32 $confopts"
 fi
 
 if [ "x$dollvm" == "x1" ] ; then

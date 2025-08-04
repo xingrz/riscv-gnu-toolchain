@@ -10,7 +10,8 @@ variables:
   # clone depth set to a small number
   GIT_DEPTH: "3"
   IMGSVR: rego.corp.nucleisys.com/software
-  LINBUILDIMG: "gnutoolchain-centos6"
+  # centos 6 is EOL, use centos 7
+  LINBUILDIMG: "gnutoolchain-centos7"
   WINBUILDIMG: "gnutoolchain-ubuntu20.04"
   IMGTAG: "latest"
   JOBS: 32
@@ -176,7 +177,8 @@ build_linux:
     # copy the template
     - cp -f scripts/toolchain/buildenv.sample build.env
     # source scl environment https://listman.redhat.com/archives/sclorg/2020-October/msg00000.html
-    - source scl_source enable devtoolset-8 rh-python36 || true
+    # enable following scl toolsets for centos7
+    - source scl_source enable devtoolset-9 rh-python38 || true
     - which gcc python3
     - BUILDENV=build.env source scripts/toolchain/setup_env.sh
     - export TOOLVER=${citoolver}
@@ -202,13 +204,14 @@ build_windows:
   parallel:
     matrix:
       - citooltype: ["newlibc", "glibc"]
+        citoolhost: ["win32",  "win64"]
   script:
     # copy the template
     - cp -f scripts/toolchain/buildenv.sample build.env
     - BUILDENV=build.env source scripts/toolchain/setup_env.sh
     - export TOOLVER=${citoolver}
     - export TOOLTYPE=${citooltype}
-    - export TOOLHOST=win32
+    - export TOOLHOST=${citoolhost}
     # clean existing toolchain install prefix directory
     - export DOCLEANPREFIX=1
     - ./scripts/toolchain/save_env.sh build.env
@@ -227,7 +230,7 @@ cleanbuild:
   parallel:
     matrix:
       - citooltype: ["newlibc", "glibc"]
-        citoolhost: ["win32", "linux64"]
+        citoolhost: ["win32",  "win64", "linux64"]
   stage: build
   when: manual
   allow_failure: true

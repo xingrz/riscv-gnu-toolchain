@@ -13,7 +13,7 @@ MULTILIBGEN="rv32ec-ilp32e--;rv32eac-ilp32e--;rv32emc-ilp32e--;rv32ec_zmmul-ilp3
 # Simple version: imafdc + Zb
 #MULTILIBGEN="rv32emc-ilp32e--;rv32emac-ilp32e--;rv32imc-ilp32--;rv32imac-ilp32--;rv32imafc-ilp32f--;rv32imafdc-ilp32d--;rv32imac_zba_zbb_zbs-ilp32--;rv32imafc_zba_zbb_zbs-ilp32f--;rv32imafdc_zba_zbb_zbs-ilp32d--;rv64imac-lp64--;rv64imafc-lp64f--;rv64imafdc-lp64d--;rv64imac_zba_zbb_zbs-lp64--;rv64imafc_zba_zbb_zbs-lp64f--;rv64imafdc_zba_zbb_zbs-lp64d--;"
 # build toolchain with multilib or not, 0 or 1
-# if MULTILIBGEN is not empty, will do multilib by default
+# if MULTILIBGEN is empty, will do multilib by default
 DOMULTILIB=1
 # strip toolchain after build, 0 or 1
 DOSTRIP=1
