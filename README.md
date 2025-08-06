@@ -1,6 +1,9 @@
 RISC-V GNU Compiler Toolchain
 =============================
 
+> [!NOTE]
+> Please check our internal guide for how to build and release toolchain in [scripts/toolchain/README.md](scripts/toolchain/README.md), **no technical support will be provided**!
+
 This is the RISC-V C and C++ cross-compiler. It supports two build modes:
 a generic ELF/Newlib toolchain and a more sophisticated Linux-ELF/glibc
 toolchain.

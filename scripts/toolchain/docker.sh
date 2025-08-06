@@ -5,6 +5,8 @@ SCRIPTDIR=$(readlink -f $SCRIPTDIR)
 
 # enviroment variables
 dockerrepo=${DOCKERREPO:-}
+# when remote docker image is updated, pass PULLFIRST=1
+# eg. PULLFIRST=1 bash scripts/toolchain/docker.sh win64
 pullfirst=${PULLFIRST:-}
 
 # arguments
