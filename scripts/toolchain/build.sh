@@ -185,7 +185,7 @@ if [ "x$tooltype" == "xnewlibc" ] && [ "x$dolibncrt" == "x1" ] && [ "x$dosuc" ==
         fi
         if [ -d $toolsrcdir/libncrt ] ; then
             libncrtczf=$toolbasedir/nuclei_libncrt.tar.gz
-            echo "INFO: libncrt library will not archived as $libncrtczf when build successfully"
+            echo "INFO: libncrt library will not archived as $libncrtczf if not build successfully"
             build_libncrt $toolsrcdir/libncrt $libncrtbldcfg $libncrtczf
             # get return code of build libncrt to know build is pass or fail
             dosuc=$?

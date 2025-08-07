@@ -163,7 +163,7 @@ function prepare_prerequisites() {
             symlink_gcc_prereq isl
             popd
         else
-            echo "Error: failed to download gcc prerequisites"
+            echo "ERROR: failed to download gcc prerequisites"
         fi
     fi
     popd
@@ -309,13 +309,18 @@ function build_libncrt() {
         # build libncrt library
         echo "Clean previous build for libncrt"
         rm -rf build out build_libncrt.log
+        if ! rake --version ; then
+            echo "ERROR: Ruby Rake not present, please install it first!"
+            popd
+            return 1
+        fi
         echo "Build libncrt for conf $bldcfg, library generated into out, build objects into build"
         rake conf=$bldcfg build_dir="build" out_dir="out" >build_libncrt.log 2>&1
         echo "Backup libncrt build log build_libncrt.log to $toolbuilddir"
         cp -f build_libncrt.log $toolbuilddir/
         # check the build log to see whether build libncrt library is pass or fail
         if cat build_libncrt.log | grep "rake aborted" > /dev/null ; then
-            echo "Failed to build libncrt for conf $bldcfg!"
+            echo "ERROR: Failed to build libncrt for conf $bldcfg!"
             popd
             return 1
         fi

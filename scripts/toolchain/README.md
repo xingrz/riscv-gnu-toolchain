@@ -69,12 +69,12 @@ FORCE_SUBMODULE=1 ./scripts/toolchain/prepsrc.sh develop
 We provide two docker images for build toolchains.
 
 > [!NOTE]
-> The following docker images are updated @ 2025.08.06
+> The following docker images are updated @ 2025.08.07
 
 - [**gnutoolchain-centos7:latest**](https://hub.docker.com/r/nucleisoftware/gnutoolchain-centos7/tags): Used to build toolchain for linux 64 host.
 - [**gnutoolchain-ubuntu20.04:latest**](https://hub.docker.com/r/nucleisoftware/gnutoolchain-ubuntu20.04/tags): Used to build toolchain for windows 32 and 64 host, windows 64 support is added from 2025.08.
 
-You can use this ``docker.sh`` script to startup docker environment used to build toolchain.
+**Recommended**: You can use this ``docker.sh`` script to startup docker environment used to build toolchain.
 
 ~~~shell
 # PULLFIRST=1 : pull the latest docker images first before run it to make sure the image locally is up to date, if set to 0, then will use local version if present.
