@@ -174,21 +174,19 @@ build_linux:
     matrix:
       - citooltype: ["newlibc", "glibc"]
   script:
-    # copy the template
-    - cp -f scripts/toolchain/buildenv.sample build.env
+    # Check build environment
     # source scl environment https://listman.redhat.com/archives/sclorg/2020-October/msg00000.html
     # enable following scl toolsets for centos7
     - source scl_source enable devtoolset-9 rh-python38 || true
-    - whoami
     # docker runner is non-interactive, non-logina
     # https://gitlab.com/gitlab-org/gitlab-runner/-/issues/82
     # prepare rake and ruby environment
     - eval "$(/root/.rbenv/bin/rbenv init - --no-rehash bash)"
-    - echo $PATH
-    - export
-    - which gcc python3 rake
-    - whoami
+    - echo $PATH && cat /etc/os-release
+    - whoami && which gcc python3 rake
     - gcc --version && python3 --version && rake --version
+    # copy the template
+    - cp -f scripts/toolchain/buildenv.sample build.env
     - BUILDENV=build.env source scripts/toolchain/setup_env.sh
     - export TOOLVER=${citoolver}
     - export TOOLTYPE=${citooltype}
@@ -215,6 +213,17 @@ build_windows:
       - citooltype: ["newlibc", "glibc"]
         citoolhost: ["win32",  "win64"]
   script:
+    # Check build environment
+    - echo $PATH && cat /etc/os-release
+    - whoami && which gcc python3 rake
+    - |
+        wingcc=i686-w64-mingw32-gcc
+        if [ "x${citooltype}" == "xwin64" ] ; then
+           wingcc=x86_64-w64-mingw32-gcc
+        if
+        echo "Check $wingcc version"
+        ${wingcc} --version
+    - gcc --version && python3 --version && rake --version
     # copy the template
     - cp -f scripts/toolchain/buildenv.sample build.env
     - BUILDENV=build.env source scripts/toolchain/setup_env.sh
