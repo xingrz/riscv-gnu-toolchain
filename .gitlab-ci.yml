@@ -218,7 +218,7 @@ build_windows:
     - whoami && which gcc python3 rake
     - |
         wingcc=i686-w64-mingw32-gcc
-        if [ "x${citooltype}" == "xwin64" ] ; then
+        if [ "x${citoolhost}" == "xwin64" ] ; then
            wingcc=x86_64-w64-mingw32-gcc
         fi
         echo "Check $wingcc version"
