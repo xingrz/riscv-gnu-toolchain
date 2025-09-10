@@ -9,7 +9,7 @@
 [submodule "glibc"]
 	path = glibc
 	url = ../riscv-glibc
-	branch = nuclei/2.40
+	branch = nuclei/2.41
 [submodule "dejagnu"]
 	path = dejagnu
 	url = ../riscv-dejagnu
@@ -17,7 +17,7 @@
 [submodule "newlib"]
 	path = newlib
 	url = ../riscv-newlib
-	branch = nuclei/4.4.0
+	branch = nuclei/4.5.0
 [submodule "gdb"]
 	path = gdb
 	url = ../riscv-binutils-gdb
