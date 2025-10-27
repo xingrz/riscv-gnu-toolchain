@@ -990,6 +990,7 @@ stamps/build-llvm-linux: $(LLVM_SRCDIR) $(LLVM_SRC_GIT) \
 	    -DCLANG_DEFAULT_RTLIB=libgcc \
 	    -DCLANG_DEFAULT_CXX_STDLIB=libstdc++ \
 	    -DCLANG_DEFAULT_LINKER=lld \
+	    -DDEFAULT_SYSROOT="../sysroot" \
 	    -DLLVM_INSTALL_TOOLCHAIN_ONLY=ON \
 	    -DLLVM_ENABLE_SPHINX=ON \
 	    -DLLVM_ENABLE_DOXYGEN=ON \
