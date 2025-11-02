@@ -88,6 +88,10 @@ BINUTILS_NATIVE_FLAGS := $(BINUTILS_NATIVE_FLAGS_EXTRA)
 GDB_TARGET_FLAGS := --with-expat=yes $(GDB_TARGET_FLAGS_EXTRA)
 ifneq ($(findstring mingw,@with_host@),)
 GDB_TARGET_FLAGS += CFLAGS="-O2 -g -DNCURSES_STATIC" CXXFLAGS="-O2 -g -DNCURSES_STATIC"
+ifneq ($(findstring x86_64,@with_host@),)
+# mingw x86_64 gmp build require ABI set to 64
+export ABI := 64
+endif
 endif
 GDB_NATIVE_FLAGS := $(GDB_NATIVE_FLAGS_EXTRA)
 
