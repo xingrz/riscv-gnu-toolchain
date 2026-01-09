@@ -152,11 +152,40 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Remove unneeded frameworks to recover disk space
+      - name: Remove unneeded frameworks to recover disk space (Linux)
+        if: runner.os == 'Linux'
         run: sudo ./.github/cleanup-rootfs.sh
 
-      - name: install dependencies
+      - name: Install dependencies (Linux)
+        if: runner.os == 'Linux'
         run: sudo ./.github/setup-apt.sh
+
+      - name: Install dependencies (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          # Install Homebrew packages
+          brew install python3 gawk gnu-sed make gmp mpfr libmpc isl zlib expat \
+                       texinfo flock libslirp ncurses ninja bison m4 wget \
+                       autoconf automake libtool patchutils device-tree-compiler \
+                       pkg-config cmake glib
+
+      - name: Setup PATH for GNU tools (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          # Detect architecture and set Homebrew prefix
+          if [ "$(uname -m)" = "arm64" ]; then
+            BREW_PREFIX="/opt/homebrew"
+          else
+            BREW_PREFIX="/usr/local"
+          fi
+          
+          # Add GNU tools to PATH
+          echo "$BREW_PREFIX/opt/bison/bin" >> $GITHUB_PATH
+          echo "$BREW_PREFIX/opt/gawk/libexec/gnubin" >> $GITHUB_PATH
+          echo "$BREW_PREFIX/opt/gnu-sed/libexec/gnubin" >> $GITHUB_PATH
+          echo "$BREW_PREFIX/opt/make/libexec/gnubin" >> $GITHUB_PATH
+          echo "$BREW_PREFIX/opt/m4/bin" >> $GITHUB_PATH
+          echo "$BREW_PREFIX/opt/expat/bin" >> $GITHUB_PATH
 
       - name: Load submodule cache
         uses: actions/cache/restore@v4
@@ -164,10 +193,40 @@ jobs:
           path: ${{ env.submodule_paths }}
           key: ${{ env.smcache_key }}
 
+      - name: Prepare build environment
+        run: |
+          # Set install directory based on OS
+          if [ "${{ runner.os }}" = "macOS" ]; then
+            INSTALL_DIR="${HOME}/riscv"
+            mkdir -p "$INSTALL_DIR"
+            echo "INSTALL_DIR=$INSTALL_DIR" >> $GITHUB_ENV
+            
+            # Raise file descriptor limit for macOS
+            ulimit -n 65536 || true
+            
+            # Check if we're on a case-sensitive filesystem
+            if [ ! -f "$HOME/.case_sensitive_check" ]; then
+              touch "$HOME/.CASE_CHECK" 2>/dev/null || true
+              touch "$HOME/.case_check" 2>/dev/null || true
+              if [ -f "$HOME/.CASE_CHECK" ] && [ -f "$HOME/.case_check" ]; then
+                NUM_FILES=$(ls -1 "$HOME"/.case* 2>/dev/null | wc -l)
+                if [ "$NUM_FILES" -eq 1 ]; then
+                  echo "WARNING: Not on a case-sensitive filesystem. This may cause issues with glibc builds."
+                fi
+              fi
+              rm -f "$HOME/.CASE_CHECK" "$HOME/.case_check" 2>/dev/null || true
+            fi
+          else
+            INSTALL_DIR="/mnt/riscv"
+            echo "INSTALL_DIR=$INSTALL_DIR" >> $GITHUB_ENV
+            sudo mkdir -p "$INSTALL_DIR"
+            sudo chown runner:runner "$INSTALL_DIR"
+          fi
+
       - name: build toolchain
         run: |
           TARGET_TUPLE=($(echo ${{ matrix.target }} | tr "-" "\n"))
-          BUILD_TOOLCHAIN="./configure --prefix=/mnt/riscv --with-arch=${TARGET_TUPLE[0]} --with-abi=${TARGET_TUPLE[1]}"
+          BUILD_TOOLCHAIN="./configure --prefix=${INSTALL_DIR} --with-arch=${TARGET_TUPLE[0]} --with-abi=${TARGET_TUPLE[1]}"
           ARGS=""
           if [ "${{ matrix.compiler }}" == "llvm" ]; then # build toolchain with llvm
             ARGS="$ARGS --enable-llvm"
@@ -184,15 +243,30 @@ jobs:
           if [ "${{ matrix.strip }}" = "true" ]; then
             ARGS="$ARGS --enable-strip"
           fi
+          
+          # macOS-specific configure flags
+          if [ "${{ runner.os }}" = "macOS" ]; then
+            # Disable GDB on macOS as it requires special signing
+            ARGS="$ARGS --disable-gdb"
+          fi
+          
           $BUILD_TOOLCHAIN $ARGS
-          sudo mkdir /mnt/riscv
-          sudo chown runner:runner /mnt/riscv
-          make -j $(nproc) ${{ matrix.mode }}
+          
+          # Use appropriate make command
+          if [ "${{ runner.os }}" = "macOS" ]; then
+            gmake -j $(sysctl -n hw.ncpu) ${{ matrix.mode }}
+          else
+            make -j $(nproc) ${{ matrix.mode }}
+          fi
       - name: build simulator
         if: |
           matrix.build-sim == true
         run: |
-          make -j $(nproc) build-sim
+          if [ "${{ runner.os }}" = "macOS" ]; then
+            gmake -j $(sysctl -n hw.ncpu) build-sim
+          else
+            make -j $(nproc) build-sim
+          fi
       - name: make report
         if: |
           matrix.os == 'ubuntu-24.04'
@@ -226,29 +300,37 @@ jobs:
       - name: tarball build unstripped
         if: ${{ inputs.strip == 'unstripped' || inputs.strip == 'both' }}
         run: |
-          du -s -h /mnt/riscv
-          ./.github/dedup-dir.sh /mnt/riscv/
-          XZ_OPT="-e -T0" tar cJvf riscv.tar.xz -C /mnt/ riscv/
+          du -s -h ${INSTALL_DIR}
+          if [ "${{ runner.os }}" = "Linux" ]; then
+            ./.github/dedup-dir.sh ${INSTALL_DIR}/
+          fi
+          # Get parent directory and basename for tar
+          PARENT_DIR=$(dirname ${INSTALL_DIR})
+          BASENAME=$(basename ${INSTALL_DIR})
+          XZ_OPT="-e -T0" tar cJvf riscv.tar.xz -C ${PARENT_DIR} ${BASENAME}/
           mv riscv.tar.xz ${{ steps.toolchain-name-generator.outputs.TOOLCHAIN_NAME }}.tar.xz
       - name: strip binaries
         run: |
-          # Strip all ELF binaries in the toolchain
-          # finds all of the files in /mnt/riscv, checks if they are ELF files, and strips them
+          # Strip all ELF/Mach-O binaries in the toolchain
+          # finds all of the files, checks if they are binaries, and strips them
           # strip itself would be fine running on any files, it will just complain if they are
           # not valid binaries. But that would capture the `.a` archives as well,
           # which we do not want to strip. Doing so would make linking them later problematic.
-          # The logic:
-          # 1. Find all files under /mnt/riscv
-          # 2. For each file, run `file` command to check its type
-          # 3. If the output of `file` contains "ELF", it is an ELF binary
-          # 4. Strip that file
-          # 5. Ignore others
-          find /mnt/riscv -type f -exec sh -c 'file "$1" | grep -q "ELF" && strip "$1"' _ {} \;
+          if [ "${{ runner.os }}" = "macOS" ]; then
+            # macOS: look for Mach-O files
+            find ${INSTALL_DIR} -type f -exec sh -c 'file "$1" | grep -q "Mach-O" && strip "$1" 2>/dev/null || true' _ {} \;
+          else
+            # Linux: look for ELF files
+            find ${INSTALL_DIR} -type f -exec sh -c 'file "$1" | grep -q "ELF" && strip "$1"' _ {} \;
+          fi
       - name: tarball build stripped
         if: ${{ inputs.strip == 'stripped' || inputs.strip == 'both' }}
         run: |
-          du -s -h /mnt/riscv
-          XZ_OPT="-e -T0" tar cJvf riscv-stripped.tar.xz -C /mnt/ riscv/
+          du -s -h ${INSTALL_DIR}
+          # Get parent directory and basename for tar
+          PARENT_DIR=$(dirname ${INSTALL_DIR})
+          BASENAME=$(basename ${INSTALL_DIR})
+          XZ_OPT="-e -T0" tar cJvf riscv-stripped.tar.xz -C ${PARENT_DIR} ${BASENAME}/
           mv riscv-stripped.tar.xz ${{ steps.toolchain-name-generator.outputs.TOOLCHAIN_NAME_STRIPPED }}.tar.xz
       - uses: actions/upload-artifact@v4
         if: ${{ inputs.strip == 'unstripped' || inputs.strip == 'both' }}

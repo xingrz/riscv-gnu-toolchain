@@ -15,6 +15,15 @@ jobs:
     with:
       artifact-name: build
 
+  build-macos:
+    uses: ./.github/workflows/build-reusable.yaml
+    with:
+      artifact-name: macos-build
+      os: '["macos-13", "macos-14"]'
+      mode: '["newlib"]'
+      target: '["rv32gc-ilp32d","rv64gc-lp64d"]'
+      compiler: '["gcc"]'
+
   test-sim:
     uses: ./.github/workflows/build-reusable.yaml
     with:

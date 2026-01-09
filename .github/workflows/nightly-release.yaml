@@ -56,8 +56,18 @@ jobs:
     if: needs.activity-check.outputs.stale != 'true'
     uses: ./.github/workflows/build-reusable.yaml
 
+  build-macos:
+    needs: [activity-check]
+    if: needs.activity-check.outputs.stale != 'true'
+    uses: ./.github/workflows/build-reusable.yaml
+    with:
+      os: '["macos-13", "macos-14"]'
+      mode: '["newlib"]'
+      target: '["rv32gc-ilp32d","rv64gc-lp64d"]'
+      compiler: '["gcc"]'
+
   create-release:
-    needs: [build]
+    needs: [build, build-macos]
     runs-on: ubuntu-latest
     outputs:
       upload_url: ${{ steps.create_release.outputs.upload_url }}
