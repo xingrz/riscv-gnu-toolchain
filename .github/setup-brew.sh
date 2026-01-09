@@ -12,7 +12,7 @@ echo "Installing Homebrew packages for RISC-V toolchain build..."
 # Install dependencies
 brew install python3 gawk gnu-sed make gmp mpfr libmpc isl zlib expat \
              texinfo flock libslirp ncurses ninja bison m4 wget \
-             autoconf automake libtool patchutils device-tree-compiler \
+             autoconf automake libtool patchutils dtc \
              pkg-config cmake glib
 
 echo "Homebrew packages installed successfully"

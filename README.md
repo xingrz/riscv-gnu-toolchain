@@ -34,7 +34,7 @@ Also available for Arch users on the AUR: [https://aur.archlinux.org/packages/ri
 
 On macOS, you can use [Homebrew](http://brew.sh) to install the dependencies:
 
-    $ brew install python3 gawk gnu-sed make gmp mpfr libmpc isl zlib expat texinfo flock libslirp ncurses ninja bison m4 wget autoconf automake libtool patchutils device-tree-compiler pkg-config cmake glib
+    $ brew install python3 gawk gnu-sed make gmp mpfr libmpc isl zlib expat texinfo flock libslirp ncurses ninja bison m4 wget autoconf automake libtool patchutils dtc pkg-config cmake glib
 
 **Note:** Prebuilt macOS toolchains are available from the [nightly releases](https://github.com/riscv/riscv-gnu-toolchain/releases) and are automatically built via GitHub Actions for both Intel and Apple Silicon Macs.
 
