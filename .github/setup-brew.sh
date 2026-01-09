@@ -11,7 +11,7 @@ echo "Installing Homebrew packages for RISC-V toolchain build..."
 brew install python3 gawk gnu-sed make gmp mpfr libmpc isl zlib expat \
              texinfo flock libslirp ncurses ninja bison m4 wget \
              autoconf automake libtool patchutils device-tree-compiler \
-             pkg-config cmake libglib2.0
+             pkg-config cmake glib
 
 # Setup PATH for GNU tools
 export PATH="/opt/homebrew/opt/bison/bin:$PATH"

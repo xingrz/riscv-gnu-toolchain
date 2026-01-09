@@ -205,16 +205,20 @@ jobs:
             ulimit -n 65536 || true
             
             # Check if we're on a case-sensitive filesystem
-            if [ ! -f "$HOME/.case_sensitive_check" ]; then
-              touch "$HOME/.CASE_CHECK" 2>/dev/null || true
-              touch "$HOME/.case_check" 2>/dev/null || true
-              if [ -f "$HOME/.CASE_CHECK" ] && [ -f "$HOME/.case_check" ]; then
-                NUM_FILES=$(ls -1 "$HOME"/.case* 2>/dev/null | wc -l)
-                if [ "$NUM_FILES" -eq 1 ]; then
-                  echo "WARNING: Not on a case-sensitive filesystem. This may cause issues with glibc builds."
-                fi
-              fi
-              rm -f "$HOME/.CASE_CHECK" "$HOME/.case_check" 2>/dev/null || true
+            # Create two files with names that differ only in case
+            touch "$HOME/.test_case_A" 2>/dev/null || true
+            touch "$HOME/.test_case_a" 2>/dev/null || true
+            
+            # Count how many files were created
+            NUM_FILES=$(ls -1 "$HOME"/.test_case_* 2>/dev/null | wc -l | tr -d ' ')
+            
+            # Clean up test files
+            rm -f "$HOME/.test_case_A" "$HOME/.test_case_a" 2>/dev/null || true
+            
+            # If only 1 file exists, filesystem is case-insensitive
+            if [ "$NUM_FILES" -eq 1 ]; then
+              echo "WARNING: Filesystem is case-insensitive. This may cause issues with glibc builds."
+              echo "For glibc/Linux builds, please use a case-sensitive filesystem (e.g., APFS case-sensitive volume)."
             fi
           else
             INSTALL_DIR="/mnt/riscv"
