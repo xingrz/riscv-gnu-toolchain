@@ -34,7 +34,9 @@ Also available for Arch users on the AUR: [https://aur.archlinux.org/packages/ri
 
 On macOS, you can use [Homebrew](http://brew.sh) to install the dependencies:
 
-    $ brew install python3 gawk gnu-sed make gmp mpfr libmpc isl zlib expat texinfo flock libslirp ncurses ninja bison m4 wget
+    $ brew install python3 gawk gnu-sed make gmp mpfr libmpc isl zlib expat texinfo flock libslirp ncurses ninja bison m4 wget autoconf automake libtool patchutils device-tree-compiler pkg-config cmake glib
+
+**Note:** Prebuilt macOS toolchains are available from the [nightly releases](https://github.com/riscv/riscv-gnu-toolchain/releases) and are automatically built via GitHub Actions for both Intel and Apple Silicon Macs.
 
 When executing the instructions in this README, please use `gmake` instead of `make` to use the newly installed version of make.
 To build the glibc (Linux) on macOS, you will need to build within a case-sensitive file
@@ -111,24 +113,40 @@ This option only takes effect for the GNU toolchain.
 The toolchain has an option `--enable-strip` to control strip of host binaries,
 strip is disabled by default.
 
-### Installation (MacOS ARM)
+### Installation (macOS)
 
-First, ensure you have cloned the toolchain repository in a case-sensitive volume. 
+**Note:** For convenience, you can download prebuilt macOS toolchains from the [nightly releases](https://github.com/riscv/riscv-gnu-toolchain/releases). These are built for both Intel (x86_64) and Apple Silicon (ARM64) Macs.
 
-Now source `macos.zsh` to setup the PATH variable so that the build scripts can use the tools from homebrew, which are needed to build the GNU toolchain.
+To build from source on macOS:
+
+First, ensure you have installed the prerequisites using Homebrew (see the [Prerequisites](#prerequisites) section above).
+
+Source `macos.zsh` to setup the PATH variable so that the build scripts can use the GNU tools from Homebrew:
+
+    $ source macos.zsh
 
 Then, run configure with your desired flags - For example:
 ```
-./configure --prefix=/Volumes/case-sensitive/opt/riscv --with-arch=rv64gc_zifencei --with-abi=lp64d --enable-linux --disable-gdb
+./configure --prefix=$HOME/riscv --with-arch=rv64gc --with-abi=lp64d --disable-gdb
 ```
 
-Then, raise the limit of open files. Run: `ulimit -n 65536`
+**Note:** GDB is disabled by default on macOS because it requires special code signing. For Linux targets, you may use `--enable-linux` but this requires a case-sensitive filesystem (see note below).
 
-Builds on MacOS are highly specific to OS versions and the versions of the developer tools installed. We recommend running `make check-binutils` first, which will help surface a some of the more frequent build errors we've seen without having to start a full build.
+Then, raise the limit of open files:
 
-If `make check-binutils` errors, check the [following documentation](./macos-build.md) for a list of common errors when building on MacOS and their solutions.
+    $ ulimit -n 65536
 
-When `make check-binutils` finishes successfully, you run the build normally with `make` or `make linux`.
+Builds on macOS are highly specific to OS versions and the versions of the developer tools installed. We recommend running `make check-binutils` first (or `gmake check-binutils`), which will help surface some of the more frequent build errors we've seen without having to start a full build.
+
+If `make check-binutils` errors, check the [following documentation](./macos-build.md) for a list of common errors when building on macOS and their solutions.
+
+When `make check-binutils` finishes successfully, you can run the build normally with `gmake` (or `make` if you sourced macos.zsh):
+```
+gmake           # for newlib (bare-metal) toolchain
+gmake linux     # for glibc-based Linux toolchain (requires case-sensitive filesystem)
+```
+
+**Case-sensitive filesystem for glibc builds:** To build the glibc (Linux) toolchain on macOS, you will need to build within a case-sensitive filesystem. The simplest approach is to create and mount a new disk image with a case-sensitive format. Make sure that the mount point does not contain spaces. This is not necessary to build newlib or gcc itself on macOS.
 
 ### Troubleshooting Build Problems
 
