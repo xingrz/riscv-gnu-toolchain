@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - nuclei/*
   pull_request:
     branches:
       - master
