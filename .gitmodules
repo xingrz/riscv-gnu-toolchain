@@ -22,10 +22,6 @@
 	path = gdb
 	url = https://github.com/riscv-mcu/riscv-binutils-gdb
 	branch = nuclei/gdb-16.2
-[submodule "qemu"]
-	path = qemu
-	url = https://github.com/riscv-mcu/qemu
-	branch = nuclei/9.0
 [submodule "musl"]
 	path = musl
 	url = https://github.com/riscv-mcu/musl
