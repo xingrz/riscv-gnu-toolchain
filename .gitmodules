@@ -1,44 +1,44 @@
 [submodule "binutils"]
 	path = binutils
-	url = ../riscv-binutils-gdb
+	url = https://github.com/riscv-mcu/riscv-binutils-gdb
 	branch = nuclei/binutils-2_44
 [submodule "gcc"]
 	path = gcc
-	url = ../riscv-gcc
+	url = https://github.com/riscv-mcu/riscv-gcc
 	branch = nuclei/14.x
 [submodule "glibc"]
 	path = glibc
-	url = ../riscv-glibc
+	url = https://github.com/riscv-mcu/riscv-glibc
 	branch = nuclei/2.40
 [submodule "dejagnu"]
 	path = dejagnu
-	url = ../riscv-dejagnu
+	url = https://github.com/riscv-mcu/riscv-dejagnu
 	branch = nuclei/dejagnu
 [submodule "newlib"]
 	path = newlib
-	url = ../riscv-newlib
+	url = https://github.com/riscv-mcu/riscv-newlib
 	branch = nuclei/4.4.0
 [submodule "gdb"]
 	path = gdb
-	url = ../riscv-binutils-gdb
+	url = https://github.com/riscv-mcu/riscv-binutils-gdb
 	branch = nuclei/gdb-16.2
 [submodule "qemu"]
 	path = qemu
-	url = ../qemu
+	url = https://github.com/riscv-mcu/qemu
 	branch = nuclei/9.0
 [submodule "musl"]
 	path = musl
-	url = ../musl
+	url = https://github.com/riscv-mcu/musl
 	branch = nuclei/1.2.2
 [submodule "spike"]
 	path = spike
-	url = ../riscv-isa-sim
+	url = https://github.com/riscv-mcu/riscv-isa-sim
 	branch = master
 [submodule "pk"]
 	path = pk
-	url = ../riscv-pk
+	url = https://github.com/riscv-mcu/riscv-pk
 	branch = master
 [submodule "llvm"]
 	path = llvm
-	url = ../llvm-project
+	url = https://github.com/riscv-mcu/llvm-project
 	branch = nuclei/19.x
