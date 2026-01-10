@@ -16,7 +16,7 @@ jobs:
       matrix:
         os:     [ubuntu-20.04, ubuntu-22.04]
         mode:   [newlib]
-        target: [rv32gc-ilp32d, rv64gc-lp64d]
+        target: [rv32gc-ilp32d, rv64gc-lp64d, rv64ima-lp64]
     steps:
       - uses: actions/checkout@v6
 
