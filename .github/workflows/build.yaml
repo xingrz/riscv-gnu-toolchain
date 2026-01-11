@@ -25,15 +25,6 @@ jobs:
       - name: install dependencies
         run: sudo ./.github/setup-apt.sh
 
-      - name: build toolchain
-        run: |
-          TARGET_TUPLE=($(echo ${{ matrix.target }} | tr "-" "\n"))
-          ./configure --prefix=/opt/riscv --with-arch=${TARGET_TUPLE[0]} --with-abi=${TARGET_TUPLE[1]}
-          sudo make -j $(nproc) ${{ matrix.mode }}
-
-      - name: tarball build
-        run: tar czvf riscv.tar.gz -C /opt/ riscv/
-
       - name: generate prebuilt toolchain name
         id:   toolchain-name-generator
         run: |
@@ -48,7 +39,22 @@ jobs:
           esac
           echo "TOOLCHAIN_NAME=riscv$BITS-$MODE-${{ matrix.os }}-nightly" >> "$GITHUB_OUTPUT"
 
+      - name: build toolchain
+        run: |
+          TARGET_TUPLE=($(echo ${{ matrix.target }} | tr "-" "\n"))
+          ./configure \
+            --prefix=/opt/${{ steps.toolchain-name-generator.outputs.TOOLCHAIN_NAME }}/gcc \
+            --with-arch=${TARGET_TUPLE[0]} \
+            --with-abi=${TARGET_TUPLE[1]}
+          sudo make -j $(nproc) ${{ matrix.mode }}
+
+      - name: tarball build
+        run: |
+          tar czvf \
+            ${{ steps.toolchain-name-generator.outputs.TOOLCHAIN_NAME }}.tar.gz \
+            -C /opt/${{ steps.toolchain-name-generator.outputs.TOOLCHAIN_NAME }}/ gcc/
+
       - uses: actions/upload-artifact@v6
         with:
           name: ${{ steps.toolchain-name-generator.outputs.TOOLCHAIN_NAME }}
-          path: riscv.tar.gz
+          path: ${{ steps.toolchain-name-generator.outputs.TOOLCHAIN_NAME }}.tar.gz
