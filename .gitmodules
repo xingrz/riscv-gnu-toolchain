@@ -1,7 +1,7 @@
 [submodule "binutils"]
 	path = binutils
-	url = https://github.com/riscv-mcu/riscv-binutils-gdb
-	branch = nuclei/binutils-2_44
+	url = ../riscv-binutils-gdb
+	branch = nuclei/2025.02+fixes
 [submodule "gcc"]
 	path = gcc
 	url = https://github.com/riscv-mcu/riscv-gcc
