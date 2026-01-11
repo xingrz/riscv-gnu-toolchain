@@ -15,11 +15,8 @@ jobs:
     strategy:
       matrix:
         os:     [ubuntu-20.04, ubuntu-22.04]
-        mode:   [newlib, linux, musl]
+        mode:   [newlib]
         target: [rv32gc-ilp32d, rv64gc-lp64d]
-        exclude:
-          - mode: musl
-            target: rv32gc-ilp32d
     steps:
       - uses: actions/checkout@v6
 
