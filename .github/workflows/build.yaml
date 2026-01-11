@@ -14,16 +14,46 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os:     [ubuntu-20.04, ubuntu-22.04]
+        os:     [macos-latest]
         mode:   [newlib]
-        target: [rv32gc-ilp32d, rv64gc-lp64d, rv64ima-lp64]
+        target: [rv64ima-lp64]
     steps:
+      - name: prepare case-sensitive filesystem (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          hdiutil create -size 100g -fs 'Case-sensitive APFS' -volname riscv-gnu-toolchain -type SPARSEBUNDLE riscv-gnu-toolchain.sparsebundle
+          hdiutil attach riscv-gnu-toolchain.sparsebundle -mountpoint ./riscv-gnu-toolchain
+
       - uses: actions/checkout@v6
         with:
+          path: riscv-gnu-toolchain
           submodules: recursive
 
-      - name: install dependencies
+      - name: install dependencies (Linux)
+        if: runner.os == 'Linux'
         run: sudo ./.github/setup-apt.sh
+        working-directory: riscv-gnu-toolchain
+
+      - name: install dependencies (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          ./.github/setup-brew.sh
+
+          BREW_PREFIX=$(brew --prefix)
+          echo "$BREW_PREFIX/opt/bison/bin" >> "$GITHUB_PATH"
+          echo "$BREW_PREFIX/opt/expat/bin" >> "$GITHUB_PATH"
+          echo "$BREW_PREFIX/opt/gawk/libexec/gnubin" >> "$GITHUB_PATH"
+          echo "$BREW_PREFIX/opt/gnu-sed/libexec/gnubin" >> "$GITHUB_PATH"
+          echo "$BREW_PREFIX/opt/m4/bin" >> "$GITHUB_PATH"
+          echo "$BREW_PREFIX/opt/make/libexec/gnubin" >> "$GITHUB_PATH"
+          echo "GNUMAKE=$BREW_PREFIX/opt/make/libexec/gnubin/make" >> "$GITHUB_ENV"
+          echo "MAKE=$BREW_PREFIX/opt/make/libexec/gnubin/make" >> "$GITHUB_ENV"
+
+          sudo xcode-select --switch /Library/Developer/CommandLineTools
+          echo "CPLUS_INCLUDE_PATH=$(xcrun --show-sdk-path)/usr/include/c++/v1" >> "$GITHUB_ENV"
+
+          ulimit -n 65536 || true
+        working-directory: riscv-gnu-toolchain
 
       - name: generate prebuilt toolchain name
         id:   toolchain-name-generator
@@ -44,9 +74,11 @@ jobs:
           TARGET_TUPLE=($(echo ${{ matrix.target }} | tr "-" "\n"))
           ./configure \
             --prefix=/opt/${{ steps.toolchain-name-generator.outputs.TOOLCHAIN_NAME }}/gcc \
+            --disable-gdb \
             --with-arch=${TARGET_TUPLE[0]} \
             --with-abi=${TARGET_TUPLE[1]}
           sudo make -j $(nproc) ${{ matrix.mode }}
+        working-directory: riscv-gnu-toolchain
 
       - name: tarball build
         run: |
