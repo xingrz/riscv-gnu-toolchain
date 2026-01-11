@@ -16,7 +16,7 @@ jobs:
       matrix:
         os:     [macos-latest]
         mode:   [newlib]
-        target: [rv64ima-lp64]
+        target: [rv32imac_zba_zbb_zbc_zbs-ilp32]
     steps:
       - name: prepare case-sensitive filesystem (macOS)
         if: runner.os == 'macOS'
@@ -75,6 +75,7 @@ jobs:
           ./configure \
             --prefix=/opt/${{ steps.toolchain-name-generator.outputs.TOOLCHAIN_NAME }}/gcc \
             --disable-gdb \
+            --with-multilib-generator="rv32imac_zba_zbb_zbc_zbs-ilp32--;rv32imafc_zba_zbb_zbc_zbs-ilp32f--" \
             --with-arch=${TARGET_TUPLE[0]} \
             --with-abi=${TARGET_TUPLE[1]}
           sudo make -j $(nproc) ${{ matrix.mode }}
