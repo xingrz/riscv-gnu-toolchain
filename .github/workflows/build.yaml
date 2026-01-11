@@ -19,11 +19,8 @@ jobs:
         target: [rv32gc-ilp32d, rv64gc-lp64d, rv64ima-lp64]
     steps:
       - uses: actions/checkout@v6
-
-      - name: initialize submodules
-        run: |
-          git submodule init
-          git submodule update --recursive --progress --recommend-shallow
+        with:
+          submodules: recursive
 
       - name: install dependencies
         run: sudo ./.github/setup-apt.sh
@@ -49,7 +46,7 @@ jobs:
             *)
               MODE="elf";;
           esac
-          echo ::set-output name=TOOLCHAIN_NAME::riscv$BITS-$MODE-${{ matrix.os }}-nightly
+          echo "TOOLCHAIN_NAME=riscv$BITS-$MODE-${{ matrix.os }}-nightly" >> "$GITHUB_OUTPUT"
 
       - uses: actions/upload-artifact@v6
         with:
